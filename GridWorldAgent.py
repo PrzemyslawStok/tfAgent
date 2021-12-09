@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
-    train_step_counter = tf.compat.v2.Variable(0)
+    train_step_counter = tf.Variable(0)
 
     tf_agent = dqn_agent.DqnAgent(
         train_env.time_step_spec(),
@@ -105,6 +105,8 @@ if __name__ == '__main__':
     episode_len = []
 
     final_time_step, policy_state = driver.run()
+
+    print(final_time_step,policy_state)
 
     for i in range(num_iterations):
         final_time_step, _ = driver.run(final_time_step, policy_state)
