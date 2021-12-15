@@ -116,8 +116,8 @@ if __name__ == '__main__':
     # train_py_env = suite_gym.load(env_name)
     # eval_py_env = suite_gym.load(env_name)
 
-    train_env = tf_py_environment.TFPyEnvironment(suite_gym.load('CartPole-v0'))
-    eval_env = tf_py_environment.TFPyEnvironment(suite_gym.load('CartPole-v0'))
+    train_env = tf_py_environment.TFPyEnvironment(suite_gym.load(env_name))
+    eval_env = tf_py_environment.TFPyEnvironment(suite_gym.load(env_name))
 
     fc_layer_params = (100, 50)
     action_tensor_spec = tensor_spec.from_spec(env.action_spec())
@@ -167,7 +167,7 @@ if __name__ == '__main__':
                                                     train_env.action_spec())
 
     example_environment = tf_py_environment.TFPyEnvironment(
-        suite_gym.load('CartPole-v0'))
+        suite_gym.load(env_name))
 
     time_step = example_environment.reset()
 
@@ -212,7 +212,7 @@ if __name__ == '__main__':
 
     print(final_time_step, policy_state)
 
-    eval_py_env = suite_gym.load('CartPole-v0')
+    eval_py_env = suite_gym.load(env_name)
     create_policy_eval_video(eval_py_env, agent.policy, "untrainded-agent")
 
     for i in range(num_iterations):
