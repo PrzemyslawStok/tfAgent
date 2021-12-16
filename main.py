@@ -1,36 +1,22 @@
-import base64
-import IPython
-import imageio
-
-import tensorflow as tf
+import time
 
 import PIL.Image
-import pyvirtualdisplay
-
+import imageio
 import numpy as np
-
-from ConstructQnetwork import construct_qnet
-
-from tf_agents.agents import tf_agent
-
+import pyvirtualdisplay
+import tensorflow as tf
+from matplotlib import pyplot as plot
 from tf_agents.agents.dqn import dqn_agent
-from tf_agents.drivers import py_driver, dynamic_step_driver
+from tf_agents.drivers import dynamic_step_driver
 from tf_agents.environments import suite_gym
 from tf_agents.environments import tf_py_environment
-from tf_agents.eval import metric_utils
 from tf_agents.metrics import tf_metrics
-from tf_agents.networks import sequential, q_network
-from tf_agents.policies import py_tf_eager_policy
 from tf_agents.policies import random_tf_policy
-from tf_agents.replay_buffers import reverb_replay_buffer, tf_uniform_replay_buffer
-from tf_agents.replay_buffers import reverb_utils
-from tf_agents.trajectories import trajectory
+from tf_agents.replay_buffers import tf_uniform_replay_buffer
 from tf_agents.specs import tensor_spec
 from tf_agents.utils import common
 
-from matplotlib import pyplot as plot
-
-import time
+from ConstructQnetwork import construct_qnet
 
 
 def compute_avg_return(environment, policy, num_episodes=10):
@@ -95,7 +81,6 @@ if __name__ == '__main__':
     env = suite_gym.load(env_name)
 
     env.reset()
-    PIL.Image.fromarray(env.render())
 
     print('Observation Spec:')
     print(env.time_step_spec().observation)
@@ -109,18 +94,6 @@ if __name__ == '__main__':
     time_step = env.reset()
     print('Time step:')
     print(time_step)
-
-    action = np.array(1, dtype=np.int32)
-
-    for i in range(0):
-        next_time_step = env.step(action)
-        # print('Next time step:')
-        print(next_time_step.reward)
-        time.sleep(0.1)
-        PIL.Image.fromarray(env.render())
-
-    # train_py_env = suite_gym.load(env_name)
-    # eval_py_env = suite_gym.load(env_name)
 
     train_env = tf_py_environment.TFPyEnvironment(suite_gym.load(env_name))
     eval_env = tf_py_environment.TFPyEnvironment(suite_gym.load(env_name))
@@ -188,7 +161,7 @@ if __name__ == '__main__':
         train_env,
         collect_policy,
         observers=replay_observer + train_metrics,
-        num_steps=1)
+        num_steps=2)
 
     episode_len = []
 
