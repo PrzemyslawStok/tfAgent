@@ -51,17 +51,8 @@ def create_policy_eval_video(eval_py_env, policy, filename, num_episodes=5, fps=
     return filename
 
 
-# See also the metrics module for standard implementations of different metrics.
-# https://github.com/tensorflow/agents/tree/master/tf_agents/metrics
-
-
 if __name__ == '__main__':
-    print('PyCharm')
-
-    # Set up a virtual display for rendering OpenAI gym environments.
     display = pyvirtualdisplay.Display(visible=0, size=(1400, 900)).start()
-
-    print(tf.version.VERSION)
 
     num_iterations = 20000
 
@@ -108,7 +99,7 @@ if __name__ == '__main__':
 
     train_step_counter = tf.Variable(0)
 
-    #q_net = q_network.QNetwork(
+    # q_net = q_network.QNetwork(
     #    train_env.observation_spec(),
     #    train_env.action_spec(),
     #    fc_layer_params=fc_layer_params)
