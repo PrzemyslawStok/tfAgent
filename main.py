@@ -62,7 +62,7 @@ if __name__ == '__main__':
     replay_buffer_max_length = 100000
     batch_size = 64
     learning_rate = 1e-3
-    log_interval = 200
+    log_interval = 100
 
     num_eval_episodes = 10
     eval_interval = 1000
@@ -120,14 +120,6 @@ if __name__ == '__main__':
 
     random_policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(),
                                                     train_env.action_spec())
-
-    example_environment = tf_py_environment.TFPyEnvironment(
-        suite_gym.load(env_name))
-
-    time_step = example_environment.reset()
-
-    print("sum: ", compute_avg_return(eval_env, random_policy, num_eval_episodes))
-
     replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
         data_spec=agent.collect_data_spec,
         batch_size=train_env.batch_size,
@@ -162,7 +154,7 @@ if __name__ == '__main__':
     print(final_time_step, policy_state)
 
     eval_py_env = suite_gym.load(env_name)
-    create_policy_eval_video(eval_py_env, agent.policy, env_name + "-untrainded-agent")
+    # create_policy_eval_video(eval_py_env, agent.policy, env_name + "-untrainded-agent")
 
     metrics_names = ['loss', 'epizode length', 'average']
     progbar = Progbar(num_iterations, stateful_metrics=metrics_names)
@@ -174,13 +166,18 @@ if __name__ == '__main__':
         train_loss = agent.train(experience=experience)
         step = agent.train_step_counter.numpy()
 
+
         if step % log_interval == 0:
             episode_len.append(train_metrics[3].result().numpy())
             values = [(metrics_names[0], train_loss.loss), (metrics_names[1], train_metrics[3].result().numpy()),
                       (metrics_names[2], compute_avg_return(eval_env, agent.policy, num_eval_episodes))]
             progbar.update(i, values)
 
-    progbar.update(i, values, True)
+        if i == num_iterations - 1:
+            values = [(metrics_names[0], train_loss.loss), (metrics_names[1], train_metrics[3].result().numpy()),
+                      (metrics_names[2], compute_avg_return(eval_env, agent.policy, num_eval_episodes))]
+            progbar.update(i, values, finalize=True)
+
     plot.plot(episode_len)
     plot.show()
 
