@@ -8,6 +8,9 @@ import PIL.Image
 import pyvirtualdisplay
 
 import numpy as np
+
+from ConstructQnetwork import construct_qnet
+
 from tf_agents.agents import tf_agent
 
 from tf_agents.agents.dqn import dqn_agent
@@ -16,7 +19,7 @@ from tf_agents.environments import suite_gym
 from tf_agents.environments import tf_py_environment
 from tf_agents.eval import metric_utils
 from tf_agents.metrics import tf_metrics
-from tf_agents.networks import sequential
+from tf_agents.networks import sequential, q_network
 from tf_agents.policies import py_tf_eager_policy
 from tf_agents.policies import random_tf_policy
 from tf_agents.replay_buffers import reverb_replay_buffer, tf_uniform_replay_buffer
@@ -87,8 +90,8 @@ if __name__ == '__main__':
     eval_interval = 1000
 
     mountains = "MountainCar-v0"
-    cartpole = "'CartPole-v0'"
-    env_name = mountains
+    cartpole = "CartPole-v1"
+    env_name = cartpole
     env = suite_gym.load(env_name)
 
     env.reset()
@@ -122,36 +125,20 @@ if __name__ == '__main__':
     train_env = tf_py_environment.TFPyEnvironment(suite_gym.load(env_name))
     eval_env = tf_py_environment.TFPyEnvironment(suite_gym.load(env_name))
 
-    fc_layer_params = (100, 50)
+    fc_layer_params = (100, 100, 50)
     action_tensor_spec = tensor_spec.from_spec(env.action_spec())
     num_actions = action_tensor_spec.maximum - action_tensor_spec.minimum + 1
 
-
-    # Define a helper function to create Dense layers configured with the right
-    # activation and kernel initializer.
-    def dense_layer(num_units):
-        return tf.keras.layers.Dense(
-            num_units,
-            activation=tf.keras.activations.relu,
-            kernel_initializer=tf.keras.initializers.VarianceScaling(
-                scale=2.0, mode='fan_in', distribution='truncated_normal'))
-
-
-    # QNetwork consists of a sequence of Dense layers followed by a dense layer
-    # with `num_actions` units to generate one q_value per available action as
-    # its output.
-    dense_layers = [dense_layer(num_units) for num_units in fc_layer_params]
-    q_values_layer = tf.keras.layers.Dense(
-        num_actions,
-        activation=None,
-        kernel_initializer=tf.keras.initializers.RandomUniform(
-            minval=-0.03, maxval=0.03),
-        bias_initializer=tf.keras.initializers.Constant(-0.2))
-    q_net = sequential.Sequential(dense_layers + [q_values_layer])
+    q_net = construct_qnet(num_actions, fc_layer_params)
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
     train_step_counter = tf.Variable(0)
+
+    #q_net = q_network.QNetwork(
+    #    train_env.observation_spec(),
+    #    train_env.action_spec(),
+    #    fc_layer_params=fc_layer_params)
 
     agent = dqn_agent.DqnAgent(
         train_env.time_step_spec(),
@@ -176,12 +163,6 @@ if __name__ == '__main__':
 
     print("sum: ", compute_avg_return(eval_env, random_policy, num_eval_episodes))
 
-    table_name = 'uniform_table'
-    replay_buffer_signature = tensor_spec.from_spec(
-        agent.collect_data_spec)
-    replay_buffer_signature = tensor_spec.add_outer_dim(
-        replay_buffer_signature)
-
     replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
         data_spec=agent.collect_data_spec,
         batch_size=train_env.batch_size,
@@ -190,7 +171,7 @@ if __name__ == '__main__':
     replay_observer = [replay_buffer.add_batch]
 
     dataset = replay_buffer.as_dataset(
-        num_parallel_calls=3,
+        num_parallel_calls=8,
         sample_batch_size=batch_size,
         num_steps=2).prefetch(3)
 
@@ -237,4 +218,4 @@ if __name__ == '__main__':
     plot.plot(episode_len)
     plot.show()
 
-    create_policy_eval_video(eval_py_env, agent.policy, env_name + "trained-agent")
+    create_policy_eval_video(eval_py_env, agent.policy, env_name + "-trained-agent")
