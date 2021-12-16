@@ -46,6 +46,7 @@ def compute_avg_return(environment, policy, num_episodes=10):
     avg_return = total_return / num_episodes
     return avg_return.numpy()[0]
 
+
 def create_policy_eval_video(eval_py_env, policy, filename, num_episodes=5, fps=30):
     filename = filename + ".mp4"
     eval_env = tf_py_environment.TFPyEnvironment(eval_py_env)
@@ -85,7 +86,9 @@ if __name__ == '__main__':
     num_eval_episodes = 10
     eval_interval = 1000
 
-    env_name = 'CartPole-v0'
+    mountains = "MountainCar-v0"
+    cartpole = "'CartPole-v0'"
+    env_name = mountains
     env = suite_gym.load(env_name)
 
     env.reset()
@@ -213,7 +216,7 @@ if __name__ == '__main__':
     print(final_time_step, policy_state)
 
     eval_py_env = suite_gym.load(env_name)
-    create_policy_eval_video(eval_py_env, agent.policy, "untrainded-agent")
+    create_policy_eval_video(eval_py_env, agent.policy, env_name + "-untrainded-agent")
 
     for i in range(num_iterations):
         final_time_step, _ = driver.run(final_time_step, policy_state)
@@ -234,4 +237,4 @@ if __name__ == '__main__':
     plot.plot(episode_len)
     plot.show()
 
-    create_policy_eval_video(eval_py_env, agent.policy, "trained-agent")
+    create_policy_eval_video(eval_py_env, agent.policy, env_name + "trained-agent")
