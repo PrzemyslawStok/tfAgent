@@ -1,11 +1,8 @@
-import time
-
-import PIL.Image
 import imageio
-import numpy as np
 import pyvirtualdisplay
 import tensorflow as tf
 from matplotlib import pyplot as plot
+from tensorflow.keras.utils import Progbar
 from tf_agents.agents.dqn import dqn_agent
 from tf_agents.drivers import dynamic_step_driver
 from tf_agents.environments import suite_gym
@@ -17,7 +14,6 @@ from tf_agents.specs import tensor_spec
 from tf_agents.utils import common
 
 from ConstructQnetwork import construct_qnet
-from tensorflow.keras.utils import Progbar
 
 
 def compute_avg_return(environment, policy, num_episodes=10):
@@ -62,15 +58,20 @@ if __name__ == '__main__':
     replay_buffer_max_length = 100000
     batch_size = 64
     learning_rate = 1e-3
-    log_interval = 100
+    log_interval = 1000
 
     num_eval_episodes = 10
     eval_interval = 1000
 
-    mountains = "MountainCar-v0"
+    pendulum = "Pendulum-v1"
+    acrobot = "Acrobot-v1"
+    mountains = "MountainCarContinuous-v0"
     cartpole = "CartPole-v1"
     env_name = cartpole
     env = suite_gym.load(env_name)
+
+    train_env = tf_py_environment.TFPyEnvironment(env)
+    eval_env = tf_py_environment.TFPyEnvironment(env)
 
     env.reset()
 
@@ -86,9 +87,6 @@ if __name__ == '__main__':
     time_step = env.reset()
     print('Time step:')
     print(time_step)
-
-    train_env = tf_py_environment.TFPyEnvironment(suite_gym.load(env_name))
-    eval_env = tf_py_environment.TFPyEnvironment(suite_gym.load(env_name))
 
     fc_layer_params = (100, 100, 50)
     action_tensor_spec = tensor_spec.from_spec(env.action_spec())
@@ -130,7 +128,7 @@ if __name__ == '__main__':
     dataset = replay_buffer.as_dataset(
         num_parallel_calls=8,
         sample_batch_size=batch_size,
-        num_steps=2).prefetch(3)
+        num_steps=2).prefetch(8)
 
     iterator = iter(dataset)
 
@@ -153,8 +151,7 @@ if __name__ == '__main__':
 
     print(final_time_step, policy_state)
 
-    eval_py_env = suite_gym.load(env_name)
-    # create_policy_eval_video(eval_py_env, agent.policy, env_name + "-untrainded-agent")
+    #create_policy_eval_video(env, agent.policy, env_name + "-untrainded-agent")
 
     metrics_names = ['loss', 'epizode length', 'average']
     progbar = Progbar(num_iterations, stateful_metrics=metrics_names)
@@ -166,19 +163,17 @@ if __name__ == '__main__':
         train_loss = agent.train(experience=experience)
         step = agent.train_step_counter.numpy()
 
-
         if step % log_interval == 0:
             episode_len.append(train_metrics[3].result().numpy())
             values = [(metrics_names[0], train_loss.loss), (metrics_names[1], train_metrics[3].result().numpy()),
                       (metrics_names[2], compute_avg_return(eval_env, agent.policy, num_eval_episodes))]
-            progbar.update(i, values)
+            progbar.update(i + 1, values)
+            plot.plot(episode_len)
+            plot.show()
 
         if i == num_iterations - 1:
             values = [(metrics_names[0], train_loss.loss), (metrics_names[1], train_metrics[3].result().numpy()),
                       (metrics_names[2], compute_avg_return(eval_env, agent.policy, num_eval_episodes))]
-            progbar.update(i, values, finalize=True)
+            progbar.update(i + 1, values, finalize=True)
 
-    plot.plot(episode_len)
-    plot.show()
-
-    create_policy_eval_video(eval_py_env, agent.policy, env_name + "-trained-agent")
+    create_policy_eval_video(env, agent.policy, env_name + "-trained-agent")
