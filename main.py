@@ -75,11 +75,13 @@ def main(argv):
     log_interval = 1000
 
     num_eval_episodes = 10
+    parallel_calls = 1
 
     pendulum = "Pendulum-v1"
     acrobot = "Acrobot-v1"
     mountains = "MountainCarContinuous-v0"
     cartpole = "CartPole-v1"
+    lunar_lander = "LunarLander-v2"
     env_name = cartpole
     env = suite_gym.load(env_name)
 
@@ -91,8 +93,6 @@ def main(argv):
     eval_env = tf_py_environment.TFPyEnvironment(env)
 
     env.reset()
-
-    parallel_calls = 8
 
     train_env = tf_py_environment.TFPyEnvironment(
         ParallelPyEnvironment(
