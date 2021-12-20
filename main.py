@@ -50,6 +50,7 @@ def create_policy_eval_video(eval_py_env, policy, filename, num_episodes=5, fps=
                 video.append_data(eval_py_env.render())
     return filename
 
+
 def envInfo(env):
     print('Observation Spec:')
     print(env.time_step_spec().observation)
@@ -64,9 +65,8 @@ def envInfo(env):
     print('Time step:')
     print(time_step)
 
-def main(argv):
-    display = pyvirtualdisplay.Display(visible=0, size=(1400, 900)).start()
 
+def main(argv):
     num_iterations = 20000
 
     replay_buffer_max_length = 100000
@@ -85,16 +85,18 @@ def main(argv):
 
     # env = GridWorldEnv()
 
-    envInfo(env)
+    # envInfo(env)
 
     train_env = tf_py_environment.TFPyEnvironment(env)
     eval_env = tf_py_environment.TFPyEnvironment(env)
 
     env.reset()
 
-    train_env_parallel = tf_py_environment.TFPyEnvironment(
+    parallel_calls = 8
+
+    train_env = tf_py_environment.TFPyEnvironment(
         ParallelPyEnvironment(
-            [lambda: suite_gym.load(env_name)] * 10
+            [lambda: suite_gym.load(env_name)] * parallel_calls
         )
     )
 
@@ -136,17 +138,17 @@ def main(argv):
     replay_observer = [replay_buffer.add_batch]
 
     dataset = replay_buffer.as_dataset(
-        num_parallel_calls=8,
-        sample_batch_size=batch_size,
-        num_steps=2).prefetch(8)
+        num_parallel_calls=parallel_calls,
+        sample_batch_size=batch_size*parallel_calls,
+        num_steps=2).prefetch(parallel_calls*2)
 
     iterator = iter(dataset)
 
     train_metrics = [
         tf_metrics.NumberOfEpisodes(),
         tf_metrics.EnvironmentSteps(),
-        tf_metrics.AverageReturnMetric(),
-        tf_metrics.AverageEpisodeLengthMetric(),
+        tf_metrics.AverageReturnMetric(batch_size=parallel_calls),
+        tf_metrics.AverageEpisodeLengthMetric(batch_size=parallel_calls),
     ]
 
     driver = dynamic_step_driver.DynamicStepDriver(
@@ -191,4 +193,3 @@ def main(argv):
 
 if __name__ == '__main__':
     tf_agents.system.multiprocessing.handle_main(main)
-
