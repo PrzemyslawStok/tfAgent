@@ -1,12 +1,14 @@
 import imageio
 import pyvirtualdisplay
 import tensorflow as tf
+import tf_agents
 from matplotlib import pyplot as plot
 from tensorflow.keras.utils import Progbar
 from tf_agents.agents.dqn import dqn_agent
 from tf_agents.drivers import dynamic_step_driver
 from tf_agents.environments import suite_gym
 from tf_agents.environments import tf_py_environment
+from tf_agents.environments import ParallelPyEnvironment
 from tf_agents.metrics import tf_metrics
 from tf_agents.policies import random_tf_policy
 from tf_agents.replay_buffers import tf_uniform_replay_buffer
@@ -14,6 +16,7 @@ from tf_agents.specs import tensor_spec
 from tf_agents.utils import common
 
 from ConstructQnetwork import construct_qnet
+from GridWorldEnv import GridWorldEnv
 
 
 def compute_avg_return(environment, policy, num_episodes=10):
@@ -47,34 +50,7 @@ def create_policy_eval_video(eval_py_env, policy, filename, num_episodes=5, fps=
                 video.append_data(eval_py_env.render())
     return filename
 
-
-if __name__ == '__main__':
-    display = pyvirtualdisplay.Display(visible=0, size=(1400, 900)).start()
-
-    num_iterations = 20000
-
-    initial_collect_steps = 100
-    collect_steps_per_iteration = 1
-    replay_buffer_max_length = 100000
-    batch_size = 64
-    learning_rate = 1e-3
-    log_interval = 1000
-
-    num_eval_episodes = 10
-    eval_interval = 1000
-
-    pendulum = "Pendulum-v1"
-    acrobot = "Acrobot-v1"
-    mountains = "MountainCarContinuous-v0"
-    cartpole = "CartPole-v1"
-    env_name = cartpole
-    env = suite_gym.load(env_name)
-
-    train_env = tf_py_environment.TFPyEnvironment(env)
-    eval_env = tf_py_environment.TFPyEnvironment(env)
-
-    env.reset()
-
+def envInfo(env):
     print('Observation Spec:')
     print(env.time_step_spec().observation)
 
@@ -87,6 +63,40 @@ if __name__ == '__main__':
     time_step = env.reset()
     print('Time step:')
     print(time_step)
+
+def main(argv):
+    display = pyvirtualdisplay.Display(visible=0, size=(1400, 900)).start()
+
+    num_iterations = 20000
+
+    replay_buffer_max_length = 100000
+    batch_size = 64
+    learning_rate = 1e-3
+    log_interval = 1000
+
+    num_eval_episodes = 10
+
+    pendulum = "Pendulum-v1"
+    acrobot = "Acrobot-v1"
+    mountains = "MountainCarContinuous-v0"
+    cartpole = "CartPole-v1"
+    env_name = cartpole
+    env = suite_gym.load(env_name)
+
+    # env = GridWorldEnv()
+
+    envInfo(env)
+
+    train_env = tf_py_environment.TFPyEnvironment(env)
+    eval_env = tf_py_environment.TFPyEnvironment(env)
+
+    env.reset()
+
+    train_env_parallel = tf_py_environment.TFPyEnvironment(
+        ParallelPyEnvironment(
+            [lambda: suite_gym.load(env_name)] * 10
+        )
+    )
 
     fc_layer_params = (100, 100, 50)
     action_tensor_spec = tensor_spec.from_spec(env.action_spec())
@@ -151,7 +161,7 @@ if __name__ == '__main__':
 
     print(final_time_step, policy_state)
 
-    #create_policy_eval_video(env, agent.policy, env_name + "-untrainded-agent")
+    # create_policy_eval_video(env, agent.policy, env_name + "-untrainded-agent")
 
     metrics_names = ['loss', 'epizode length', 'average']
     progbar = Progbar(num_iterations, stateful_metrics=metrics_names)
@@ -177,3 +187,8 @@ if __name__ == '__main__':
             progbar.update(i + 1, values, finalize=True)
 
     create_policy_eval_video(env, agent.policy, env_name + "-trained-agent")
+
+
+if __name__ == '__main__':
+    tf_agents.system.multiprocessing.handle_main(main)
+
