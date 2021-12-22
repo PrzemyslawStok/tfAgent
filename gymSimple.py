@@ -3,6 +3,12 @@ from gym import envs
 
 from gym import spaces
 
+import tensorflow as tf
+import os
+
+import tensorflow_probability
+
+agentDir = "savedAgents"
 
 def renderEnv(envName="CartPole-v0", doneAfterEnd=True, closeEnv=False, steps=100, epizodes=1):
     env = gym.make(envName)
@@ -35,8 +41,11 @@ def printEnvNames():
     for i in envsList:
         print(i.id)
 
+def loadAgent(agentDir: str, savedPolicy:str):
+    return tf.saved_model.load(os.path.join(agentDir,savedPolicy))
 
 if __name__ == "__main__":
+    agent = loadAgent(agentDir,"Cartpole-v1-trained-agent")
     renderEnv("LunarLander-v2")
     printEnvNames()
 

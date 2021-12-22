@@ -70,6 +70,8 @@ def envInfo(env):
     print('Time step:')
     print(time_step)
 
+def loadAgent(agentDir: str, savedPolicy:str):
+    return tf.saved_model.load(os.path.join(agentDir,savedPolicy))
 
 def main(argv):
     num_iterations = 1000
@@ -82,7 +84,7 @@ def main(argv):
     num_eval_episodes = 10
     parallel_calls = 1
 
-    agentDir = "savadAgents"
+    agentDir = "savedAgents"
 
     pendulum = "Pendulum-v1"
     acrobot = "Acrobot-v1"
@@ -93,6 +95,7 @@ def main(argv):
 
     env = gym.make(cartpole)
     env = suite_gym.wrap_env(env)
+
     envInfo(env)
 
     #exit()
@@ -208,6 +211,8 @@ def main(argv):
     tf_policy_saver.save(policy_dir)
 
     create_policy_eval_video(env, agent.policy, env_name + "-trained-agent")
+
+    agent = loadAgent(agentDir, "Cartpole-v1-trained-agent")
 
 
 if __name__ == '__main__':
