@@ -75,7 +75,7 @@ def main(argv):
     log_interval = 1000
 
     num_eval_episodes = 10
-    parallel_calls = 1
+    parallel_calls = 5
 
     pendulum = "Pendulum-v1"
     acrobot = "Acrobot-v1"
