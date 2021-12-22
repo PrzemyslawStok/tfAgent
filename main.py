@@ -1,3 +1,4 @@
+import gym
 import imageio
 import pyvirtualdisplay
 import tensorflow as tf
@@ -10,6 +11,7 @@ from tf_agents.environments import suite_gym
 from tf_agents.environments import tf_py_environment
 from tf_agents.environments import ParallelPyEnvironment
 from tf_agents.metrics import tf_metrics
+from tf_agents.networks import q_network
 from tf_agents.policies import random_tf_policy
 from tf_agents.replay_buffers import tf_uniform_replay_buffer
 from tf_agents.specs import tensor_spec
@@ -21,6 +23,7 @@ from GridWorldEnv import GridWorldEnv
 
 def compute_avg_return(environment, policy, num_episodes=10):
     total_return = 0.0
+    return 1.0
     for _ in range(num_episodes):
 
         time_step = environment.reset()
@@ -75,7 +78,7 @@ def main(argv):
     log_interval = 1000
 
     num_eval_episodes = 10
-    parallel_calls = 5
+    parallel_calls = 8
 
     pendulum = "Pendulum-v1"
     acrobot = "Acrobot-v1"
@@ -84,6 +87,12 @@ def main(argv):
     lunar_lander = "LunarLander-v2"
     env_name = cartpole
     env = suite_gym.load(env_name)
+
+    env = gym.make(lunar_lander)
+    env = suite_gym.wrap_env(env)
+    envInfo(env)
+
+    #exit()
 
     # env = GridWorldEnv()
 
@@ -104,16 +113,16 @@ def main(argv):
     action_tensor_spec = tensor_spec.from_spec(env.action_spec())
     num_actions = action_tensor_spec.maximum - action_tensor_spec.minimum + 1
 
-    q_net = construct_qnet(num_actions, fc_layer_params)
+    #q_net = construct_qnet(num_actions, fc_layer_params)
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
     train_step_counter = tf.Variable(0)
 
-    # q_net = q_network.QNetwork(
-    #    train_env.observation_spec(),
-    #    train_env.action_spec(),
-    #    fc_layer_params=fc_layer_params)
+    q_net = q_network.QNetwork(
+       train_env.observation_spec(),
+       train_env.action_spec(),
+       fc_layer_params=fc_layer_params)
 
     agent = dqn_agent.DqnAgent(
         train_env.time_step_spec(),

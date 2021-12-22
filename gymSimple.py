@@ -6,6 +6,7 @@ from gym import spaces
 
 def renderEnv(envName="CartPole-v0", doneAfterEnd=True, closeEnv=False, steps=100, epizodes=1):
     env = gym.make(envName)
+    env1 = env.unwrapped
 
     for episode in range(epizodes):
         env.reset()
