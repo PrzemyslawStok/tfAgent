@@ -15,7 +15,7 @@ from tf_agents.metrics import tf_metrics
 from tf_agents.networks import q_network
 from tf_agents.policies import random_tf_policy, policy_saver
 from tf_agents.replay_buffers import tf_uniform_replay_buffer
-from tf_agents.specs import tensor_spec
+from tf_agents.specs import tensor_spec, array_spec
 from tf_agents.utils import common
 
 
@@ -26,6 +26,9 @@ from GridWorldEnv import GridWorldEnv
 
 def compute_avg_return(environment, policy, num_episodes=10):
     total_return = 0.0
+
+    random_policy = random_tf_policy.RandomTFPolicy(environment.time_step_spec(),
+                                                    environment.action_spec())
     for _ in range(num_episodes):
 
         time_step = environment.reset()
@@ -93,8 +96,15 @@ def main(argv):
     lunar_lander = "LunarLander-v2"
     env_name = cartpole
 
+
     env = gym.make(cartpole)
+    space = suite_gym.gym_wrapper.spec_from_gym_space(env.observation_space)
+    print(env.observation_space)
+    print(env.action_space)
     env = suite_gym.wrap_env(env)
+    print(env.observation_spec())
+    print(env.action_spec())
+
 
     envInfo(env)
 
@@ -213,6 +223,7 @@ def main(argv):
     create_policy_eval_video(env, agent.policy, env_name + "-trained-agent")
 
     agent = loadAgent(agentDir, "Cartpole-v1-trained-agent")
+    print(agent)
 
 
 if __name__ == '__main__':
