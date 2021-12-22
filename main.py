@@ -3,6 +3,7 @@ import imageio
 import pyvirtualdisplay
 import tensorflow as tf
 import tf_agents
+import os
 from matplotlib import pyplot as plot
 from tensorflow.keras.utils import Progbar
 from tf_agents.agents.dqn import dqn_agent
@@ -12,10 +13,12 @@ from tf_agents.environments import tf_py_environment
 from tf_agents.environments import ParallelPyEnvironment
 from tf_agents.metrics import tf_metrics
 from tf_agents.networks import q_network
-from tf_agents.policies import random_tf_policy
+from tf_agents.policies import random_tf_policy, policy_saver
 from tf_agents.replay_buffers import tf_uniform_replay_buffer
 from tf_agents.specs import tensor_spec
 from tf_agents.utils import common
+
+
 
 from ConstructQnetwork import construct_qnet
 from GridWorldEnv import GridWorldEnv
@@ -23,7 +26,6 @@ from GridWorldEnv import GridWorldEnv
 
 def compute_avg_return(environment, policy, num_episodes=10):
     total_return = 0.0
-    return 1.0
     for _ in range(num_episodes):
 
         time_step = environment.reset()
@@ -70,7 +72,7 @@ def envInfo(env):
 
 
 def main(argv):
-    num_iterations = 20000
+    num_iterations = 1000
 
     replay_buffer_max_length = 100000
     batch_size = 64
@@ -78,7 +80,9 @@ def main(argv):
     log_interval = 1000
 
     num_eval_episodes = 10
-    parallel_calls = 8
+    parallel_calls = 1
+
+    agentDir = "savadAgents"
 
     pendulum = "Pendulum-v1"
     acrobot = "Acrobot-v1"
@@ -86,9 +90,8 @@ def main(argv):
     cartpole = "CartPole-v1"
     lunar_lander = "LunarLander-v2"
     env_name = cartpole
-    env = suite_gym.load(env_name)
 
-    env = gym.make(lunar_lander)
+    env = gym.make(cartpole)
     env = suite_gym.wrap_env(env)
     envInfo(env)
 
@@ -96,16 +99,17 @@ def main(argv):
 
     # env = GridWorldEnv()
 
-    # envInfo(env)
-
-    train_env = tf_py_environment.TFPyEnvironment(env)
-    eval_env = tf_py_environment.TFPyEnvironment(env)
-
     env.reset()
 
     train_env = tf_py_environment.TFPyEnvironment(
         ParallelPyEnvironment(
-            [lambda: suite_gym.load(env_name)] * parallel_calls
+            [lambda: env] * parallel_calls
+        )
+    )
+
+    eval_env = tf_py_environment.TFPyEnvironment(
+        ParallelPyEnvironment(
+            [lambda: env] * parallel_calls
         )
     )
 
@@ -177,6 +181,8 @@ def main(argv):
     metrics_names = ['loss', 'epizode length', 'average']
     progbar = Progbar(num_iterations, stateful_metrics=metrics_names)
 
+    compute_avg_return(train_env, agent.policy, num_eval_episodes)
+
     for i in range(num_iterations):
         final_time_step, _ = driver.run(final_time_step, policy_state)
 
@@ -196,6 +202,10 @@ def main(argv):
             values = [(metrics_names[0], train_loss.loss), (metrics_names[1], train_metrics[3].result().numpy()),
                       (metrics_names[2], compute_avg_return(eval_env, agent.policy, num_eval_episodes))]
             progbar.update(i + 1, values, finalize=True)
+
+    policy_dir = os.path.join(agentDir, env_name + "-trained-agent")
+    tf_policy_saver = policy_saver.PolicySaver(agent.policy)
+    tf_policy_saver.save(policy_dir)
 
     create_policy_eval_video(env, agent.policy, env_name + "-trained-agent")
 
