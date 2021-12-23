@@ -1,3 +1,5 @@
+import time
+
 import gym
 from gym import envs
 
@@ -16,7 +18,7 @@ from tf_agents.specs import tensor_spec
 agentDir = "savedAgents"
 
 
-def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=True, closeEnv=False, steps=100, epizodes=1):
+def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=False, closeEnv=False, steps=100, epizodes=1):
     env = gym.make(envName)
     env1 = env.unwrapped
 
@@ -24,7 +26,7 @@ def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=True, closeEnv=Fa
 
     if policy == None:
         policy = random_tf_policy.RandomTFPolicy(time_spec,
-                                                suite_gym.gym_wrapper.spec_from_gym_space(env.action_space))
+                                                 suite_gym.gym_wrapper.spec_from_gym_space(env.action_space))
 
     for episode in range(epizodes):
         observation = env.reset()
@@ -44,6 +46,18 @@ def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=True, closeEnv=Fa
                 break
     if closeEnv:
         env.close()
+
+
+def viewEnv(envName="CartPole-v0", steps=1000):
+    env = gym.make(envName)
+    env.reset()
+
+    for i in range(steps):
+        env.render()
+        env.step(env.action_space.sample())
+        time.sleep(0.1)
+
+    env.close()
 
 
 def printEnv(env):
@@ -67,5 +81,7 @@ def loadAgent(agentDir: str, savedPolicy: str):
 if __name__ == "__main__":
     agent = loadAgent(agentDir, "Cartpole-v1-trained-agent")
     # renderEnv("LunarLander-v2")
-    renderEnv(envName="CartPole-v0", policy=agent)
+    # renderEnv(envName="CartPole-v0")
+    viewEnv("MontezumaRevenge-ram-v0")
+    # viewEnv("LunarLander-v2")
     # printEnvNames()

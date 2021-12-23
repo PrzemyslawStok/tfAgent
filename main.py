@@ -77,7 +77,7 @@ def loadAgent(agentDir: str, savedPolicy:str):
     return tf.saved_model.load(os.path.join(agentDir,savedPolicy))
 
 def main(argv):
-    num_iterations = 1000
+    num_iterations = 20000
 
     replay_buffer_max_length = 100000
     batch_size = 64
