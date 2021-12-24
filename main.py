@@ -1,43 +1,46 @@
+import os
+
 import gym
 import imageio
-import pyvirtualdisplay
 import tensorflow as tf
 import tf_agents
-import os
 from matplotlib import pyplot as plot
 from tensorflow.keras.utils import Progbar
 from tf_agents.agents.dqn import dqn_agent
 from tf_agents.drivers import dynamic_step_driver
+from tf_agents.environments import ParallelPyEnvironment
 from tf_agents.environments import suite_gym
 from tf_agents.environments import tf_py_environment
-from tf_agents.environments import ParallelPyEnvironment
 from tf_agents.metrics import tf_metrics
 from tf_agents.networks import q_network
 from tf_agents.policies import random_tf_policy, policy_saver
 from tf_agents.replay_buffers import tf_uniform_replay_buffer
-from tf_agents.specs import tensor_spec, array_spec
+from tf_agents.specs import tensor_spec
 from tf_agents.utils import common
 
-
-
-from ConstructQnetwork import construct_qnet
-from GridWorldEnv import GridWorldEnv
+import timeit
 
 
 def compute_avg_return(environment, policy, num_episodes=10):
     total_return = 0.0
 
-    random_policy = random_tf_policy.RandomTFPolicy(environment.time_step_spec(),
-                                                    environment.action_spec())
+    start_time = timeit.default_timer()
+
     for _ in range(num_episodes):
 
         time_step = environment.reset()
+        start_time = printTime(start_time, "average env reset")
         episode_return = 0.0
+        stepsNo = 0
 
         while not time_step.is_last():
             action_step = policy.action(time_step)
+            # start_time = printTime(start_time, "policy action")
             time_step = environment.step(action_step.action)
+            # start_time = printTime(start_time, "time step")
             episode_return += time_step.reward
+            stepsNo += 1
+            print(f"steps no: {stepsNo}")
         total_return += episode_return
 
     avg_return = total_return / num_episodes
@@ -73,16 +76,29 @@ def envInfo(env):
     print('Time step:')
     print(time_step)
 
-def loadAgent(agentDir: str, savedPolicy:str):
-    return tf.saved_model.load(os.path.join(agentDir,savedPolicy))
+
+def loadAgent(agentDir: str, savedPolicy: str):
+    return tf.saved_model.load(os.path.join(agentDir, savedPolicy))
+
+
+def printTime(start_time: float, text: str = "") -> float:
+    end_time = timeit.default_timer()
+    if len(text) > 0:
+        text += " "
+
+    print(f"{text}elapsed time {(end_time - start_time):0.5f}s")
+    return timeit.default_timer()
+
 
 def main(argv):
-    num_iterations = 20000
+    start_time = timeit.default_timer()
+
+    num_iterations = 500
 
     replay_buffer_max_length = 100000
     batch_size = 64
     learning_rate = 1e-3
-    log_interval = 1000
+    log_interval = 100
 
     num_eval_episodes = 10
     parallel_calls = 1
@@ -94,10 +110,10 @@ def main(argv):
     mountains = "MountainCarContinuous-v0"
     cartpole = "CartPole-v1"
     lunar_lander = "LunarLander-v2"
-    env_name = cartpole
+    montezuma = "MontezumaRevenge-ram-v0"
+    env_name = montezuma
 
-
-    env = gym.make(cartpole)
+    env = gym.make(env_name)
     space = suite_gym.gym_wrapper.spec_from_gym_space(env.observation_space)
     print(env.observation_space)
     print(env.action_space)
@@ -105,14 +121,15 @@ def main(argv):
     print(env.observation_spec())
     print(env.action_spec())
 
-
     envInfo(env)
 
-    #exit()
+    # exit()
 
     # env = GridWorldEnv()
 
     env.reset()
+
+    start_time = printTime(start_time, "init")
 
     train_env = tf_py_environment.TFPyEnvironment(
         ParallelPyEnvironment(
@@ -130,16 +147,16 @@ def main(argv):
     action_tensor_spec = tensor_spec.from_spec(env.action_spec())
     num_actions = action_tensor_spec.maximum - action_tensor_spec.minimum + 1
 
-    #q_net = construct_qnet(num_actions, fc_layer_params)
+    # q_net = construct_qnet(num_actions, fc_layer_params)
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
 
     train_step_counter = tf.Variable(0)
 
     q_net = q_network.QNetwork(
-       train_env.observation_spec(),
-       train_env.action_spec(),
-       fc_layer_params=fc_layer_params)
+        train_env.observation_spec(),
+        train_env.action_spec(),
+        fc_layer_params=fc_layer_params)
 
     agent = dqn_agent.DqnAgent(
         train_env.time_step_spec(),
@@ -165,8 +182,8 @@ def main(argv):
 
     dataset = replay_buffer.as_dataset(
         num_parallel_calls=parallel_calls,
-        sample_batch_size=batch_size*parallel_calls,
-        num_steps=2).prefetch(parallel_calls*2)
+        sample_batch_size=batch_size * parallel_calls,
+        num_steps=2).prefetch(parallel_calls * 2)
 
     iterator = iter(dataset)
 
@@ -185,35 +202,41 @@ def main(argv):
 
     episode_len = []
 
+    start_time = printTime(start_time, "agent init")
     final_time_step, policy_state = driver.run()
+    start_time = printTime(start_time, "single driver step")
 
-    print(final_time_step, policy_state)
-
-    # create_policy_eval_video(env, agent.policy, env_name + "-untrainded-agent")
-
-    metrics_names = ['loss', 'epizode length', 'average']
+    metrics_names = ['loss', 'length']
     progbar = Progbar(num_iterations, stateful_metrics=metrics_names)
 
     compute_avg_return(train_env, agent.policy, num_eval_episodes)
+    exit()
+    start_time = printTime(start_time, "compute average")
 
     for i in range(num_iterations):
-        final_time_step, _ = driver.run(final_time_step, policy_state)
 
+        final_time_step, _ = driver.run(final_time_step, policy_state)
+        start_time = printTime(start_time, "driver run")
         experience, _ = next(iterator)
+        start_time = printTime(start_time, "iterator")
+
         train_loss = agent.train(experience=experience)
+        start_time = printTime(start_time, "train agent")
+
         step = agent.train_step_counter.numpy()
 
         if step % log_interval == 0:
             episode_len.append(train_metrics[3].result().numpy())
-            values = [(metrics_names[0], train_loss.loss), (metrics_names[1], train_metrics[3].result().numpy()),
-                      (metrics_names[2], compute_avg_return(eval_env, agent.policy, num_eval_episodes))]
+            values = [(metrics_names[0], train_loss.loss), (metrics_names[1], train_metrics[3].result().numpy())]
+            start_time = printTime(start_time, "values")
             progbar.update(i + 1, values)
+            start_time = printTime(start_time, "progbar")
             plot.plot(episode_len)
             plot.show()
+            start_time = printTime(start_time, "draw plot")
 
         if i == num_iterations - 1:
-            values = [(metrics_names[0], train_loss.loss), (metrics_names[1], train_metrics[3].result().numpy()),
-                      (metrics_names[2], compute_avg_return(eval_env, agent.policy, num_eval_episodes))]
+            values = [(metrics_names[0], train_loss.loss), (metrics_names[1], train_metrics[3].result().numpy())]
             progbar.update(i + 1, values, finalize=True)
 
     policy_dir = os.path.join(agentDir, env_name + "-trained-agent")
