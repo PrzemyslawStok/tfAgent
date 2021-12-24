@@ -40,7 +40,8 @@ def compute_avg_return(environment, policy, num_episodes=10):
             # start_time = printTime(start_time, "time step")
             episode_return += time_step.reward
             stepsNo += 1
-            print(f"steps no: {stepsNo}")
+
+        print(f"steps no: {stepsNo}")
         total_return += episode_return
 
     avg_return = total_return / num_episodes
@@ -210,7 +211,6 @@ def main(argv):
     progbar = Progbar(num_iterations, stateful_metrics=metrics_names)
 
     compute_avg_return(train_env, agent.policy, num_eval_episodes)
-    exit()
     start_time = printTime(start_time, "compute average")
 
     for i in range(num_iterations):
