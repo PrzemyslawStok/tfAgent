@@ -115,16 +115,9 @@ def main(argv):
     env_name = montezuma
 
     env = gym.make(env_name)
-    space = suite_gym.gym_wrapper.spec_from_gym_space(env.observation_space)
-    print(env.observation_space)
-    print(env.action_space)
     env = suite_gym.wrap_env(env)
-    print(env.observation_spec())
-    print(env.action_spec())
 
-    envInfo(env)
-
-    # exit()
+    #envInfo(env)
 
     # env = GridWorldEnv()
 
@@ -210,8 +203,8 @@ def main(argv):
     metrics_names = ['loss', 'length']
     progbar = Progbar(num_iterations, stateful_metrics=metrics_names)
 
-    compute_avg_return(train_env, agent.policy, num_eval_episodes)
-    start_time = printTime(start_time, "compute average")
+    # compute_avg_return(train_env, agent.policy, num_eval_episodes)
+    # start_time = printTime(start_time, "compute average")
 
     for i in range(num_iterations):
 
