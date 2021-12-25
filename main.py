@@ -99,7 +99,7 @@ def main(argv):
     replay_buffer_max_length = 100000
     batch_size = 64
     learning_rate = 1e-3
-    log_interval = 100
+    log_interval = 1000
 
     num_eval_episodes = 10
     parallel_calls = 1
