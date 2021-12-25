@@ -1,12 +1,10 @@
 import time
-
 import gym
 from gym import envs
-
-from gym import spaces
-
 import tensorflow as tf
 import os
+
+import numpy as np
 
 import tensorflow_probability
 from tf_agents.policies import py_tf_eager_policy, random_tf_policy
@@ -18,7 +16,7 @@ from tf_agents.specs import tensor_spec
 agentDir = "savedAgents"
 
 
-def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=False, closeEnv=False, steps=100, epizodes=1):
+def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=False, closeEnv=False, steps=200, epizodes=1):
     env = gym.make(envName)
     env1 = env.unwrapped
 
@@ -40,6 +38,8 @@ def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=False, closeEnv=F
 
             action = policy.action(time_step).action
             observation, reward, done, info = env.step(action.numpy()[0])
+
+            reward = np.float32(reward)
 
             if doneAfterEnd and done:
                 print(f"Episode finished after {i + 1} timestep.")
@@ -83,8 +83,7 @@ if __name__ == "__main__":
     lunar_lander = "LunarLander-v2"
     montezuma = "MontezumaRevenge-ram-v0"
 
-    envName = cartpole
-    agent = loadAgent(agentDir, envName)
+    envName = lunar_lander
     renderEnv(envName, loadAgent(agentDir, envName))
 
     #viewEnv("MontezumaRevenge-ram-v0")

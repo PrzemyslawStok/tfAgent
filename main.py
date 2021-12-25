@@ -112,7 +112,7 @@ def main(argv):
     cartpole = "CartPole-v1"
     lunar_lander = "LunarLander-v2"
     montezuma = "MontezumaRevenge-ram-v0"
-    env_name = cartpole
+    env_name = lunar_lander
 
     env = gym.make(env_name)
     env = suite_gym.wrap_env(env)
@@ -137,7 +137,7 @@ def main(argv):
         )
     )
 
-    fc_layer_params = (100, 100, 50)
+    fc_layer_params = (8, 10, 10)
     action_tensor_spec = tensor_spec.from_spec(env.action_spec())
     num_actions = action_tensor_spec.maximum - action_tensor_spec.minimum + 1
 
