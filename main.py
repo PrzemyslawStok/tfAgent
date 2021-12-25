@@ -112,7 +112,7 @@ def main(argv):
     cartpole = "CartPole-v1"
     lunar_lander = "LunarLander-v2"
     montezuma = "MontezumaRevenge-ram-v0"
-    env_name = montezuma
+    env_name = cartpole
 
     env = gym.make(env_name)
     env = suite_gym.wrap_env(env)
