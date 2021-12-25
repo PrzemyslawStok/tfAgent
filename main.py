@@ -94,7 +94,7 @@ def printTime(start_time: float, text: str = "") -> float:
 def main(argv):
     start_time = timeit.default_timer()
 
-    num_iterations = 500
+    num_iterations = 20000
 
     replay_buffer_max_length = 100000
     batch_size = 64
@@ -196,11 +196,9 @@ def main(argv):
 
     episode_len = []
 
-    start_time = printTime(start_time, "agent init")
     final_time_step, policy_state = driver.run()
-    start_time = printTime(start_time, "single driver step")
 
-    metrics_names = ['loss', 'length']
+    metrics_names = ['reward', 'length']
     progbar = Progbar(num_iterations, stateful_metrics=metrics_names)
 
     # compute_avg_return(train_env, agent.policy, num_eval_episodes)
@@ -209,38 +207,31 @@ def main(argv):
     for i in range(num_iterations):
 
         final_time_step, _ = driver.run(final_time_step, policy_state)
-        start_time = printTime(start_time, "driver run")
+        #start_time = printTime(start_time, "driver run")
         experience, _ = next(iterator)
-        start_time = printTime(start_time, "iterator")
+        #start_time = printTime(start_time, "iterator")
 
         train_loss = agent.train(experience=experience)
-        start_time = printTime(start_time, "train agent")
+        #start_time = printTime(start_time, "train agent")
 
         step = agent.train_step_counter.numpy()
 
         if step % log_interval == 0:
             episode_len.append(train_metrics[3].result().numpy())
-            values = [(metrics_names[0], train_loss.loss), (metrics_names[1], train_metrics[3].result().numpy())]
-            start_time = printTime(start_time, "values")
+            values = [(metrics_names[0], final_time_step.reward), (metrics_names[1], train_metrics[3].result().numpy())]
             progbar.update(i + 1, values)
-            start_time = printTime(start_time, "progbar")
             plot.plot(episode_len)
             plot.show()
-            start_time = printTime(start_time, "draw plot")
 
         if i == num_iterations - 1:
             values = [(metrics_names[0], train_loss.loss), (metrics_names[1], train_metrics[3].result().numpy())]
             progbar.update(i + 1, values, finalize=True)
 
-    policy_dir = os.path.join(agentDir, env_name + "-trained-agent")
+    policy_dir = os.path.join(agentDir, env_name)
     tf_policy_saver = policy_saver.PolicySaver(agent.policy)
     tf_policy_saver.save(policy_dir)
 
-    create_policy_eval_video(env, agent.policy, env_name + "-trained-agent")
-
-    agent = loadAgent(agentDir, "Cartpole-v1-trained-agent")
-    print(agent)
-
+    #create_policy_eval_video(env, agent.policy, env_name + "-trained-agent")
 
 if __name__ == '__main__':
     tf_agents.system.multiprocessing.handle_main(main)
