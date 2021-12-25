@@ -79,9 +79,12 @@ def loadAgent(agentDir: str, savedPolicy: str):
 
 
 if __name__ == "__main__":
-    agent = loadAgent(agentDir, "Cartpole-v1-trained-agent")
-    # renderEnv("LunarLander-v2")
-    # renderEnv(envName="CartPole-v0")
-    viewEnv("MontezumaRevenge-ram-v0")
-    # viewEnv("LunarLander-v2")
-    # printEnvNames()
+    cartpole = "CartPole-v1"
+    lunar_lander = "LunarLander-v2"
+    montezuma = "MontezumaRevenge-ram-v0"
+
+    envName = cartpole
+    agent = loadAgent(agentDir, envName)
+    renderEnv(envName, loadAgent(agentDir, envName))
+
+    #viewEnv("MontezumaRevenge-ram-v0")

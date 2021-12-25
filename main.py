@@ -196,6 +196,7 @@ def main(argv):
 
     episode_len = []
 
+
     final_time_step, policy_state = driver.run()
 
     metrics_names = ['reward', 'length']
