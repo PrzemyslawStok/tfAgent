@@ -12,27 +12,29 @@ def reward(prob: float) -> float:
             reward += 1
     return reward
 
-#greedy method to select best arm based on memory array
+
+# greedy method to select best arm based on memory array
 def bestArm(a):
-    bestArm = 0 #default to 0
+    bestArm = 0  # default to 0
     bestMean = 0
     for u in a:
-        avg = np.mean(a[np.where(a[:,0] == u[0])][:, 1]) #calculate mean reward for each action
+        avg = np.mean(a[np.where(a[:, 0] == u[0])][:, 1])  # calculate mean reward for each action
         if bestMean < avg:
             bestMean = avg
             bestArm = u[0]
     return bestArm
 
-def bestArm1(experience:np.ndarray)->int:
+
+def bestArm1(experience: np.ndarray) -> int:
     bestArm = 0
     bestMean = 0
-    usedArms = np.unique(experience[:,0])
+    usedArms = np.unique(experience[:, 0])
 
     for armNo in usedArms:
-        armExperience = experience[np.where(experience[:,0]==armNo)]
-        armMean = np.mean(armExperience[:,1])
+        armExperience = experience[np.where(experience[:, 0] == armNo)]
+        armMean = np.mean(armExperience[:, 1])
 
-        if armMean>bestMean:
+        if armMean > bestMean:
             bestMean = armMean
             bestArm = armNo
 
@@ -40,7 +42,6 @@ def bestArm1(experience:np.ndarray)->int:
 
 
 np.random.seed(5)
-
 
 if __name__ == "__main__":
     n = 10
@@ -56,7 +57,7 @@ if __name__ == "__main__":
 
     startTime = timeit.default_timer()
 
-    scatterData = np.empty([2,maxIteration])
+    scatterData = np.empty([2, maxIteration])
     for i in range(maxIteration):
         if random.random() > eps:  # greedy exploitation action
             choice = bestArm1(av)
@@ -68,13 +69,12 @@ if __name__ == "__main__":
             av = np.concatenate((av, thisAV), axis=0)  # add to our action-value memory array
         # calculate the mean reward
         runningMean = np.mean(av[:, 1])
-        scatterData[0,i]=i
-        scatterData[1,i]=runningMean
+        scatterData[0, i] = i
+        scatterData[1, i] = runningMean
 
-    plot.scatter(scatterData[0],scatterData[1])
+    plot.scatter(scatterData[0], scatterData[1])
 
     endTime = timeit.default_timer()
 
     print(f"elapsed time {(endTime - startTime):0.5f}s")
     plot.show()
-
