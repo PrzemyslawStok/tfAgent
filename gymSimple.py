@@ -48,14 +48,15 @@ def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=False, closeEnv=F
         env.close()
 
 
-def viewEnv(envName="CartPole-v0", steps=1000):
+def viewEnv(envName="CartPole-v0", steps=500):
     env = gym.make(envName)
     env.reset()
 
     for i in range(steps):
         env.render()
-        env.step(env.action_space.sample())
-        time.sleep(0.1)
+        _, reward, done, _ = env.step(env.action_space.sample())
+        if done:
+            break
 
     env.close()
 
@@ -84,6 +85,6 @@ if __name__ == "__main__":
     montezuma = "MontezumaRevenge-ram-v0"
 
     envName = lunar_lander
-    renderEnv(envName, loadAgent(agentDir, envName))
+    # renderEnv(envName, loadAgent(agentDir, envName))
 
-    #viewEnv("MontezumaRevenge-ram-v0")
+    viewEnv(lunar_lander)
