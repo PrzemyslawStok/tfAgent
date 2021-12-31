@@ -11,3 +11,44 @@ class GraphEnv(py_environment.PyEnvironment):
             shape=(4,), dtype=np.int32, minimum=[0, 0, 0, 0], maximum=[5, 5, 5, 5], name='observation')
         self._state = [0, 0, 5, 5]  # represent the (row, col, frow, fcol) of the player and the finish
         self._episode_ended = False
+
+    def action_spec(self):
+        return self._action_spec
+
+    def observation_spec(self):
+        return self._observation_spec
+
+    def _reset(self):
+        self._state = [0, 0, 5, 5]
+        self._episode_ended = False
+        return ts.restart(np.array(self._state, dtype=np.int32))
+
+    def move(self, action):
+        pass
+
+    def _step(self, action):
+        if self._episode_ended:
+            return self.reset()
+
+        self.move(action)
+
+        if self.game_over():
+            self._episode_ended = True
+
+        if self._episode_ended:
+            if self.game_over():
+                reward = 100
+            else:
+                reward = 0
+            return ts.termination(np.array(self._state, dtype=np.int32), reward)
+        else:
+            return ts.transition(
+                np.array(self._state, dtype=np.int32), reward=0, discount=0.9)
+
+    def game_over(self):
+        row, col, frow, fcol = self._state[0], self._state[1], self._state[2], self._state[3]
+        return row == frow and col == fcol
+
+if __name__ == '__main__':
+    env = GraphEnv()
+    utils.validate_py_environment(env, episodes=5)
