@@ -3,6 +3,7 @@ from tf_agents.environments import py_environment, utils, wrappers, tf_py_enviro
 from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
 
+
 class GraphEnv(py_environment.PyEnvironment):
     def __init__(self):
         self._action_spec = array_spec.BoundedArraySpec(
@@ -24,7 +25,8 @@ class GraphEnv(py_environment.PyEnvironment):
         return ts.restart(np.array(self._state, dtype=np.int32))
 
     def move(self, action):
-        pass
+        coordinates = np.random.randint(0, 5)
+        self._state = [0, 1, 0, 1]
 
     def _step(self, action):
         if self._episode_ended:
@@ -48,6 +50,7 @@ class GraphEnv(py_environment.PyEnvironment):
     def game_over(self):
         row, col, frow, fcol = self._state[0], self._state[1], self._state[2], self._state[3]
         return row == frow and col == fcol
+
 
 if __name__ == '__main__':
     env = GraphEnv()
