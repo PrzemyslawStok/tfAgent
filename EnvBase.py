@@ -1,3 +1,5 @@
+import numpy as np
+
 MAX_ITERATIONS = 5000
 RESOURCE_USE_LIMIT = 3
 
@@ -40,7 +42,7 @@ class EnvML:
         pass
 
     def action_space___sample(self):
-        random_motor = randint(0, self.action_space___n - 1)
+        random_motor = np.random.randint(0, self.action_space___n - 1)
         return random_motor
 
     def step_limited_resources(self, action):
@@ -123,10 +125,10 @@ class EnvML:
         self.env_rules
 
         # Determine associated resource
-        resource = get_resource_id(action_id, self.no_of_resources)
+        resource = self.get_resource_id(action_id, self.no_of_resources)
 
         # Determine associated motor output
-        motor = get_motor_id(action_id / self.no_of_resources)
+        motor = self.get_motor_id(action_id / self.no_of_resources)
         ###print("i "+str(self.iteration)+" R: " + str(resource)+ " M:"+str(motor))
 
         self.was_last_action_useful = False
@@ -198,12 +200,14 @@ class EnvML:
         self.iteration = 0
         self.episode_finished = False
 
+        no_of_resources = self.no_of_resources
+
         self.resources_rate = np.ones(no_of_resources) * 10
         self.resources_prob = np.ones(no_of_resources)
         self.resources_use_count = np.zeros(no_of_resources)
         self.resources_avaiable = np.ones(no_of_resources)
 
-        self.prim_requirementss = np.zeros(no_of_prim_requirementss)
+        self.prim_requirementss = np.zeros(self.no_of_prim_requirementss)
 
         state = np.array(
             self.prim_requirementss.tolist() + self.calc_resource_avaiable().tolist() + self.calc_resource_probabilities().tolist())
@@ -214,10 +218,10 @@ class EnvML:
     def reset_resources_limited(self):
         self.iteration = 0
         self.episode_finished = False
-        self.resources_use_count = np.zeros(no_of_resources)
-        self.resources_use_limit = np.ones(no_of_resources) * RESOURCE_USE_LIMIT
+        self.resources_use_count = np.zeros(self.no_of_resources)
+        self.resources_use_limit = np.ones(self.no_of_resources) * RESOURCE_USE_LIMIT
 
-        self.prim_requirementss = np.zeros(no_of_prim_requirementss)
+        self.prim_requirementss = np.zeros(self.no_of_prim_requirementss)
 
         state = np.array(self.prim_requirementss.tolist() + self.calc_resource_level().tolist())
 
@@ -233,7 +237,7 @@ class EnvML:
     def check_resources_run_out(self):
         resource_uses = self.get_resource_uses()
 
-        for item in list_of_non_renewable_resources:
+        for item in self.list_of_non_renewable_resources:
             if (resource_uses[item] - self.get_resources_use_limit()[item]) == 0:
                 self.episode_finished = True
                 return True
