@@ -1,3 +1,6 @@
+import os
+import collections
+import statistics
 from typing import Tuple, List
 import numpy as np
 
@@ -6,6 +9,11 @@ import tensorflow.keras.layers as layers
 
 import gym
 from tf_agents.environments import suite_gym
+
+import tqdm
+
+modelDir = "savedModels"
+modelName = "actorCritic"
 
 
 class ActorCritic(tf.keras.Model):
@@ -86,15 +94,141 @@ def run_episode(
     return action_probs, values, rewards
 
 
+def get_expected_return(
+        rewards: tf.Tensor,
+        gamma: float,
+        standardize: bool = True) -> tf.Tensor:
+    """Compute expected returns per timestep."""
+
+    # Small epsilon value for stabilizing division operations
+    eps = np.finfo(np.float32).eps.item()
+
+    n = tf.shape(rewards)[0]
+    returns = tf.TensorArray(dtype=tf.float32, size=n)
+
+    # Start from the end of `rewards` and accumulate reward sums
+    # into the `returns` array
+    rewards = tf.cast(rewards[::-1], dtype=tf.float32)
+    discounted_sum = tf.constant(0.0)
+    discounted_sum_shape = discounted_sum.shape
+    for i in tf.range(n):
+        reward = rewards[i]
+        discounted_sum = reward + gamma * discounted_sum
+        discounted_sum.set_shape(discounted_sum_shape)
+        returns = returns.write(i, discounted_sum)
+    returns = returns.stack()[::-1]
+
+    if standardize:
+        returns = ((returns - tf.math.reduce_mean(returns)) /
+                   (tf.math.reduce_std(returns) + eps))
+
+    return returns
+
+
+huber_loss = tf.keras.losses.Huber(reduction=tf.keras.losses.Reduction.SUM)
+
+
+def compute_loss(
+        action_probs: tf.Tensor,
+        values: tf.Tensor,
+        returns: tf.Tensor) -> tf.Tensor:
+    """Computes the combined actor-critic loss."""
+
+    advantage = returns - values
+
+    action_log_probs = tf.math.log(action_probs)
+    actor_loss = -tf.math.reduce_sum(action_log_probs * advantage)
+
+    critic_loss = huber_loss(values, returns)
+
+    return actor_loss + critic_loss
+
+
+optimizer = tf.keras.optimizers.Adam(learning_rate=0.01)
+
+
+@tf.function
+def train_step(
+        initial_state: tf.Tensor,
+        model: tf.keras.Model,
+        optimizer: tf.keras.optimizers.Optimizer,
+        gamma: float,
+        max_steps_per_episode: int) -> tf.Tensor:
+    """Runs a model training step."""
+
+    with tf.GradientTape() as tape:
+        # Run the model for one episode to collect training data
+        action_probs, values, rewards = run_episode(
+            initial_state, model, max_steps_per_episode)
+
+        # Calculate expected returns
+        returns = get_expected_return(rewards, gamma)
+
+        # Convert training data to appropriate TF tensor shapes
+        action_probs, values, returns = [
+            tf.expand_dims(x, 1) for x in [action_probs, values, returns]]
+
+        # Calculating loss values to update our network
+        loss = compute_loss(action_probs, values, returns)
+
+    # Compute the gradients from the loss
+    grads = tape.gradient(loss, model.trainable_variables)
+
+    # Apply the gradients to the model's parameters
+    optimizer.apply_gradients(zip(grads, model.trainable_variables))
+
+    episode_reward = tf.math.reduce_sum(rewards)
+
+    return episode_reward
+
+
 if __name__ == '__main__':
     cartpole = "CartPole-v1"
     env_name = cartpole
 
     env = gym.make(env_name)
-    env = suite_gym.wrap_env(env)
+    #env = suite_gym.wrap_env(env)
 
     num_actions = env.action_space.n  # 2
     num_hidden_units = 128
 
     model = ActorCritic(num_actions, num_hidden_units)
-    print(model)
+
+    min_episodes_criterion = 100
+    max_episodes = 10000
+    max_steps_per_episode = 1000
+
+    # Cartpole-v0 is considered solved if average reward is >= 195 over 100
+    # consecutive trials
+    reward_threshold = 195
+    running_reward = 0
+
+    # Discount factor for future rewards
+    gamma = 0.99
+
+    # Keep last episodes reward
+    episodes_reward: collections.deque = collections.deque(maxlen=min_episodes_criterion)
+
+    with tqdm.trange(max_episodes) as t:
+        for i in t:
+            initial_state = tf.constant(env.reset(), dtype=tf.float32)
+            episode_reward = int(train_step(
+                initial_state, model, optimizer, gamma, max_steps_per_episode))
+
+            episodes_reward.append(episode_reward)
+            running_reward = statistics.mean(episodes_reward)
+
+            t.set_description(f'Episode {i}')
+            t.set_postfix(
+                episode_reward=episode_reward, running_reward=running_reward)
+
+            # Show average episode reward every 10 episodes
+            if i % 10 == 0:
+                pass  # print(f'Episode {i}: average reward: {avg_reward}')
+
+            if running_reward > reward_threshold and i >= min_episodes_criterion:
+                break
+
+    print(f'\nSolved at episode {i}: average reward: {running_reward:.2f}!')
+    model.save(os.path.join(modelDir,modelName))
+

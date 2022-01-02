@@ -1,5 +1,6 @@
 import time
 import gym
+import keras.models
 from gym import envs
 import tensorflow as tf
 import os
@@ -14,6 +15,7 @@ from tf_agents.trajectories import time_step as ts
 from tf_agents.specs import tensor_spec
 
 agentDir = "savedAgents"
+modelsDir = "savedModels"
 
 
 def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=False, closeEnv=False, steps=200, epizodes=1):
@@ -77,6 +79,9 @@ def printEnvNames():
 
 def loadAgent(agentDir: str, savedPolicy: str):
     return tf.saved_model.load(os.path.join(agentDir, savedPolicy))
+
+def loadModel(modelDir: str, modelName: str)-> tf.keras.Model:
+    return keras.models.load_model(os.path.join(modelDir, modelName))
 
 
 if __name__ == "__main__":
