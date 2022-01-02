@@ -50,7 +50,8 @@ def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=False, closeEnv=F
         env.close()
 
 
-def renderEnvModel(envName="ActorCritic", model: keras.models = None, steps=200):
+def renderEnvModel(envName="ActorCritic", model: keras.models = None, steps=200,
+                   epizodes=1):
     env = gym.make(envName)
     state = tf.constant(env.reset(), dtype=tf.float32)
 
