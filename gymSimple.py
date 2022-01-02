@@ -50,6 +50,24 @@ def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=False, closeEnv=F
         env.close()
 
 
+def renderEnvModel(envName="ActorCritic", model: keras.models = None, steps=200):
+    env = gym.make(envName)
+    state = tf.constant(env.reset(), dtype=tf.float32)
+
+    for i in range(steps):
+        env.render()
+
+        state = tf.expand_dims(state, 0)
+        action_probs, _ = model(state)
+        action = np.argmax(action_probs.numpy())
+
+        state, reward, done, _ = env.step(action)
+        if done:
+            break
+
+    env.close()
+
+
 def viewEnv(envName="CartPole-v0", steps=500):
     env = gym.make(envName)
     env.reset()
@@ -80,7 +98,8 @@ def printEnvNames():
 def loadAgent(agentDir: str, savedPolicy: str):
     return tf.saved_model.load(os.path.join(agentDir, savedPolicy))
 
-def loadModel(modelDir: str, modelName: str)-> tf.keras.Model:
+
+def loadModel(modelDir: str, modelName: str) -> tf.keras.Model:
     return keras.models.load_model(os.path.join(modelDir, modelName))
 
 
@@ -89,7 +108,11 @@ if __name__ == "__main__":
     lunar_lander = "LunarLander-v2"
     montezuma = "MontezumaRevenge-ram-v0"
 
+    actorCritic = "actorCritic"
+
     envName = lunar_lander
     # renderEnv(envName, loadAgent(agentDir, envName))
 
-    viewEnv(lunar_lander)
+    renderEnvModel(cartpole, loadModel(modelsDir, actorCritic))
+
+    # viewEnv(lunar_lander)
