@@ -22,15 +22,14 @@ class ActorCritic(tf.keras.Model):
     def __init__(
             self,
             num_actions: int,
-            actor_units = (128,),
-            critic_units = (128,)):
+            actor_units=(256,),
+            critic_units=(128, 256,)):
         """Initialize."""
         super().__init__()
 
         self.actor_layers = [layers.Dense(no_unit, activation="relu") for no_unit in actor_units]
         self.critic_layers = [layers.Dense(no_unit, activation="relu") for no_unit in critic_units]
 
-        self.common = layers.Dense(num_hidden_units, activation="relu")
         self.actor = layers.Dense(num_actions)
         self.critic = layers.Dense(1)
 
@@ -204,9 +203,11 @@ if __name__ == '__main__':
     # env = suite_gym.wrap_env(env)
 
     num_actions = env.action_space.n  # 2
-    num_hidden_units = 128
 
-    model = ActorCritic(num_actions, (128,), (128,))
+    actor_units = (64,128,)
+    critic_units = (128,)
+
+    model = ActorCritic(num_actions, actor_units, critic_units)
 
     min_episodes_criterion = 100
     max_episodes = 10000
