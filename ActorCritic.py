@@ -197,7 +197,8 @@ if __name__ == '__main__':
     cartpole = "CartPole-v1"
 
     lunar_lander = "LunarLander-v2"
-    modelName = lunar_lander
+
+    modelName = cartpole
 
     env_name = modelName
 
@@ -206,8 +207,8 @@ if __name__ == '__main__':
 
     num_actions = env.action_space.n  # 2
 
-    actor_units = (512, 256, 64)
-    critic_units = (512, 256, 64)
+    actor_units = (10,)
+    critic_units = (5, 2)
 
     model = ActorCritic(num_actions, actor_units, critic_units)
 
