@@ -195,6 +195,8 @@ def train_step(
 
 if __name__ == '__main__':
     cartpole = "CartPole-v1"
+
+    lunar_lander = "LunarLander-v2"
     modelName = cartpole
 
     env_name = modelName
@@ -204,8 +206,8 @@ if __name__ == '__main__':
 
     num_actions = env.action_space.n  # 2
 
-    actor_units = (64,128,)
-    critic_units = (128,)
+    actor_units = (64, 128)
+    critic_units = (128, 64)
 
     model = ActorCritic(num_actions, actor_units, critic_units)
 
