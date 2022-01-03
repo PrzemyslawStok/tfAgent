@@ -207,8 +207,8 @@ if __name__ == '__main__':
 
     num_actions = env.action_space.n  # 2
 
-    actor_units = (10,)
-    critic_units = (5, 2)
+    actor_units = (256,)
+    critic_units = (128, 2)
 
     model = ActorCritic(num_actions, actor_units, critic_units)
 
