@@ -109,11 +109,9 @@ if __name__ == "__main__":
     lunar_lander = "LunarLander-v2"
     montezuma = "MontezumaRevenge-ram-v0"
 
-    actorCritic = "actorCritic"
-
-    envName = lunar_lander
+    envName = cartpole
     # renderEnv(envName, loadAgent(agentDir, envName))
 
-    renderEnvModel(cartpole, loadModel(modelsDir, actorCritic))
+    renderEnvModel(cartpole, loadModel(modelsDir, envName))
 
     # viewEnv(lunar_lander)

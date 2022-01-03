@@ -6,6 +6,7 @@ import numpy as np
 
 import tensorflow as tf
 import tensorflow.keras.layers as layers
+from tf_agents.networks import sequential
 
 import gym
 from tf_agents.environments import suite_gym
@@ -13,7 +14,6 @@ from tf_agents.environments import suite_gym
 import tqdm
 
 modelDir = "savedModels"
-modelName = "actorCritic"
 
 
 class ActorCritic(tf.keras.Model):
@@ -22,17 +22,29 @@ class ActorCritic(tf.keras.Model):
     def __init__(
             self,
             num_actions: int,
-            num_hidden_units: int):
+            actor_units = (128,),
+            critic_units = (128,)):
         """Initialize."""
         super().__init__()
+
+        self.actor_layers = [layers.Dense(no_unit, activation="relu") for no_unit in actor_units]
+        self.critic_layers = [layers.Dense(no_unit, activation="relu") for no_unit in critic_units]
 
         self.common = layers.Dense(num_hidden_units, activation="relu")
         self.actor = layers.Dense(num_actions)
         self.critic = layers.Dense(1)
 
     def call(self, inputs: tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]:
-        x = self.common(inputs)
-        return self.actor(x), self.critic(x)
+        actor_units = inputs
+        critic_inputs = inputs
+
+        for layer in self.actor_layers:
+            actor_units = layer(actor_units)
+
+        for layer in self.critic_layers:
+            critic_inputs = layer(critic_inputs)
+
+        return self.actor(actor_units), self.critic(critic_inputs)
 
 
 def env_step(action: np.ndarray) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -184,15 +196,17 @@ def train_step(
 
 if __name__ == '__main__':
     cartpole = "CartPole-v1"
-    env_name = cartpole
+    modelName = cartpole
+
+    env_name = modelName
 
     env = gym.make(env_name)
-    #env = suite_gym.wrap_env(env)
+    # env = suite_gym.wrap_env(env)
 
     num_actions = env.action_space.n  # 2
     num_hidden_units = 128
 
-    model = ActorCritic(num_actions, num_hidden_units)
+    model = ActorCritic(num_actions, (128,), (128,))
 
     min_episodes_criterion = 100
     max_episodes = 10000
@@ -230,5 +244,4 @@ if __name__ == '__main__':
                 break
 
     print(f'\nSolved at episode {i}: average reward: {running_reward:.2f}!')
-    model.save(os.path.join(modelDir,modelName))
-
+    model.save(os.path.join(modelDir, modelName))
