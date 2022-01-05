@@ -200,14 +200,14 @@ if __name__ == '__main__':
 
     modelName = cartpole
 
-    env_name = modelName
+    env_name = lunar_lander
 
     env = gym.make(env_name)
     # env = suite_gym.wrap_env(env)
 
     num_actions = env.action_space.n  # 2
 
-    actor_units = (256,)
+    actor_units = (512, 256,)
     critic_units = (64,)
 
     model = ActorCritic(num_actions, actor_units, critic_units)

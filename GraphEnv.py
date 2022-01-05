@@ -5,7 +5,8 @@ from tf_agents.trajectories import time_step as ts
 
 
 class GraphEnv(py_environment.PyEnvironment):
-    def __init__(self):
+    def __init__(self, handle_auto_reset=False):
+        super().__init__(handle_auto_reset=handle_auto_reset)
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32, minimum=0, maximum=3, name='action')
         self._observation_spec = array_spec.BoundedArraySpec(
