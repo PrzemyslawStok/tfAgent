@@ -7,13 +7,13 @@ import tf_agents
 from matplotlib import pyplot as plot
 from tensorflow.keras.utils import Progbar
 from tf_agents.agents.dqn import dqn_agent
-from tf_agents.drivers import dynamic_step_driver, dynamic_episode_driver
+from tf_agents.drivers import dynamic_step_driver, dynamic_episode_driver, py_driver
 from tf_agents.environments import ParallelPyEnvironment
 from tf_agents.environments import suite_gym
 from tf_agents.environments import tf_py_environment
 from tf_agents.metrics import tf_metrics
 from tf_agents.networks import q_network
-from tf_agents.policies import random_tf_policy, policy_saver
+from tf_agents.policies import random_tf_policy, policy_saver, py_tf_eager_policy
 from tf_agents.replay_buffers import tf_uniform_replay_buffer
 from tf_agents.specs import tensor_spec
 from tf_agents.utils import common
@@ -46,6 +46,24 @@ def compute_avg_return(environment, policy, num_episodes=10):
 
     avg_return = total_return / num_episodes
     return avg_return.numpy()[0]
+
+
+def collect_episode(environment, policy, num_episodes, rb_observer):
+    driver = py_driver.PyDriver(
+        environment,
+        py_tf_eager_policy.PyTFEagerPolicy(
+            policy, use_tf_function=True),
+        [rb_observer],
+        max_episodes=num_episodes)
+
+    driver = dynamic_episode_driver.DynamicEpisodeDriver(
+        environment,
+        policy,
+        observers=rb_observer,
+        num_episodes=num_episodes)
+
+    initial_time_step = environment.reset()
+    driver.run(initial_time_step)
 
 
 def create_policy_eval_video(eval_py_env, policy, filename, num_episodes=5, fps=30):
@@ -94,12 +112,12 @@ def printTime(start_time: float, text: str = "") -> float:
 def main(argv):
     start_time = timeit.default_timer()
 
-    num_iterations = 1000
+    num_iterations = 10000
 
     replay_buffer_max_length = 100000
-    batch_size = 1
+    batch_size = 64
     learning_rate = 1e-3
-    log_interval = 1
+    log_interval = 100
 
     num_eval_episodes = 10
     parallel_calls = 1
@@ -112,7 +130,7 @@ def main(argv):
     cartpole = "CartPole-v1"
     lunar_lander = "LunarLander-v2"
     montezuma = "MontezumaRevenge-ram-v0"
-    env_name = lunar_lander
+    env_name = cartpole
 
     env = gym.make(env_name)
     env = suite_gym.wrap_env(env)
@@ -194,6 +212,10 @@ def main(argv):
         observers=replay_observer + train_metrics,
         num_steps=2)
 
+    driver1 = dynamic_episode_driver.DynamicEpisodeDriver(train_env,
+                                                          collect_policy,
+                                                          observers=replay_observer + train_metrics,
+                                                          num_episodes=1)
     episode_len = []
 
     final_time_step, policy_state = driver.run()
@@ -204,11 +226,19 @@ def main(argv):
     # compute_avg_return(train_env, agent.policy, num_eval_episodes)
     # start_time = printTime(start_time, "compute average")
 
+    agent.train = common.function(agent.train)
+
     for i in range(num_iterations):
 
-        final_time_step, _ = driver.run(final_time_step, policy_state)
+        final_time_step, _ = driver.run(final_time_step)
         # start_time = printTime(start_time, "driver run")
+
+        #collect_episode(train_env, collect_policy, 1, replay_observer + train_metrics)
+        # train_env.reset()
         experience, _ = next(iterator)
+
+        # replay_buffer.clear()
+
         # start_time = printTime(start_time, "iterator")
 
         train_loss = agent.train(experience=experience)
@@ -220,11 +250,11 @@ def main(argv):
             episode_len.append(train_metrics[3].result().numpy())
             values = [(metrics_names[0], final_time_step.reward), (metrics_names[1], train_metrics[3].result().numpy())]
             progbar.update(i + 1, values)
-            plot.plot(episode_len)
-            plot.show()
+            # plot.plot(episode_len)
+            # plot.show()
 
         if i == num_iterations - 1:
-            values = [(metrics_names[0], train_loss.loss), (metrics_names[1], train_metrics[3].result().numpy())]
+            values = [(metrics_names[0], final_time_step.reward), (metrics_names[1], train_metrics[3].result().numpy())]
             progbar.update(i + 1, values, finalize=True)
 
     policy_dir = os.path.join(agentDir, env_name)
