@@ -7,7 +7,7 @@ import tf_agents
 from matplotlib import pyplot as plot
 from tensorflow.keras.utils import Progbar
 from tf_agents.agents.dqn import dqn_agent
-from tf_agents.drivers import dynamic_step_driver
+from tf_agents.drivers import dynamic_step_driver, dynamic_episode_driver
 from tf_agents.environments import ParallelPyEnvironment
 from tf_agents.environments import suite_gym
 from tf_agents.environments import tf_py_environment
@@ -94,12 +94,12 @@ def printTime(start_time: float, text: str = "") -> float:
 def main(argv):
     start_time = timeit.default_timer()
 
-    num_iterations = 20000
+    num_iterations = 1000
 
     replay_buffer_max_length = 100000
-    batch_size = 64
+    batch_size = 1
     learning_rate = 1e-3
-    log_interval = 1000
+    log_interval = 1
 
     num_eval_episodes = 10
     parallel_calls = 1
@@ -117,7 +117,7 @@ def main(argv):
     env = gym.make(env_name)
     env = suite_gym.wrap_env(env)
 
-    #envInfo(env)
+    # envInfo(env)
 
     # env = GridWorldEnv()
 
@@ -137,7 +137,7 @@ def main(argv):
         )
     )
 
-    fc_layer_params = (8, 10, 10)
+    fc_layer_params = (512, 256)
     action_tensor_spec = tensor_spec.from_spec(env.action_spec())
     num_actions = action_tensor_spec.maximum - action_tensor_spec.minimum + 1
 
@@ -196,7 +196,6 @@ def main(argv):
 
     episode_len = []
 
-
     final_time_step, policy_state = driver.run()
 
     metrics_names = ['reward', 'length']
@@ -208,12 +207,12 @@ def main(argv):
     for i in range(num_iterations):
 
         final_time_step, _ = driver.run(final_time_step, policy_state)
-        #start_time = printTime(start_time, "driver run")
+        # start_time = printTime(start_time, "driver run")
         experience, _ = next(iterator)
-        #start_time = printTime(start_time, "iterator")
+        # start_time = printTime(start_time, "iterator")
 
         train_loss = agent.train(experience=experience)
-        #start_time = printTime(start_time, "train agent")
+        # start_time = printTime(start_time, "train agent")
 
         step = agent.train_step_counter.numpy()
 
@@ -232,7 +231,8 @@ def main(argv):
     tf_policy_saver = policy_saver.PolicySaver(agent.policy)
     tf_policy_saver.save(policy_dir)
 
-    #create_policy_eval_video(env, agent.policy, env_name + "-trained-agent")
+    # create_policy_eval_video(env, agent.policy, env_name + "-trained-agent")
+
 
 if __name__ == '__main__':
     tf_agents.system.multiprocessing.handle_main(main)
