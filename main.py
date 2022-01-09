@@ -63,7 +63,8 @@ def collect_episode(environment, policy, num_episodes, rb_observer):
         num_episodes=num_episodes)
 
     initial_time_step = environment.reset()
-    driver.run(initial_time_step)
+    final_time_step, _ = driver.run(initial_time_step)
+    return final_time_step
 
 
 def create_policy_eval_video(eval_py_env, policy, filename, num_episodes=5, fps=30):
@@ -117,7 +118,7 @@ def main(argv):
     replay_buffer_max_length = 100000
     batch_size = 64
     learning_rate = 1e-3
-    log_interval = 100
+    log_interval = 10
 
     num_eval_episodes = 10
     parallel_calls = 1
@@ -130,7 +131,7 @@ def main(argv):
     cartpole = "CartPole-v1"
     lunar_lander = "LunarLander-v2"
     montezuma = "MontezumaRevenge-ram-v0"
-    env_name = cartpole
+    env_name = lunar_lander
 
     env = gym.make(env_name)
     env = suite_gym.wrap_env(env)
@@ -230,18 +231,23 @@ def main(argv):
 
     for i in range(num_iterations):
 
-        final_time_step, _ = driver.run(final_time_step)
+        # final_time_step, _ = driver.run(final_time_step)
         # start_time = printTime(start_time, "driver run")
 
-        #collect_episode(train_env, collect_policy, 1, replay_observer + train_metrics)
+        final_time_step = collect_episode(train_env, collect_policy, 1, replay_observer + train_metrics)
         # train_env.reset()
-        experience, _ = next(iterator)
 
-        # replay_buffer.clear()
+        iterator = iter(replay_buffer.as_dataset(
+            num_parallel_calls=parallel_calls,
+            sample_batch_size=batch_size * parallel_calls,
+            num_steps=2).prefetch(parallel_calls * 2))
+        experience, _ = next(iterator)
 
         # start_time = printTime(start_time, "iterator")
 
         train_loss = agent.train(experience=experience)
+
+        # replay_buffer.clear()
         # start_time = printTime(start_time, "train agent")
 
         step = agent.train_step_counter.numpy()

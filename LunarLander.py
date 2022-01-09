@@ -113,6 +113,7 @@ class DQN:
                 self.learn_and_update_weights_by_reply()
 
                 if done:
+                    print(f"ilość kroków: {step}")
                     break
             self.rewards_list.append(reward_for_episode)
 

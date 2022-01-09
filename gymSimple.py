@@ -77,6 +77,7 @@ def viewEnv(envName="CartPole-v0", steps=500):
         env.render()
         _, reward, done, _ = env.step(env.action_space.sample())
         if done:
+            print(f"Zakończono po {i} krokach")
             break
 
     env.close()
@@ -110,8 +111,8 @@ if __name__ == "__main__":
     montezuma = "MontezumaRevenge-ram-v0"
 
     envName = lunar_lander
-    renderEnv(envName, loadAgent(agentDir, envName))
+    # renderEnv(envName, loadAgent(agentDir, envName))
 
     # renderEnvModel(cartpole, loadModel(modelsDir, envName))
 
-    # viewEnv(lunar_lander)
+    viewEnv(lunar_lander)
