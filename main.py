@@ -231,10 +231,10 @@ def main(argv):
 
     for i in range(num_iterations):
 
-        # final_time_step, _ = driver.run(final_time_step)
+        final_time_step, _ = driver1.run(final_time_step)
         # start_time = printTime(start_time, "driver run")
 
-        final_time_step = collect_episode(train_env, collect_policy, 1, replay_observer + train_metrics)
+        #final_time_step = collect_episode(train_env, collect_policy, 1, replay_observer + train_metrics)
         # train_env.reset()
 
         iterator = iter(replay_buffer.as_dataset(
@@ -254,13 +254,13 @@ def main(argv):
 
         if step % log_interval == 0:
             episode_len.append(train_metrics[3].result().numpy())
-            values = [(metrics_names[0], final_time_step.reward), (metrics_names[1], train_metrics[3].result().numpy())]
+            values = [(metrics_names[0], train_metrics[2].result().numpy()), (metrics_names[1], train_metrics[3].result().numpy())]
             progbar.update(i + 1, values)
             # plot.plot(episode_len)
             # plot.show()
 
         if i == num_iterations - 1:
-            values = [(metrics_names[0], final_time_step.reward), (metrics_names[1], train_metrics[3].result().numpy())]
+            values = [(metrics_names[0], train_metrics[2].result().numpy()), (metrics_names[1], train_metrics[3].result().numpy())]
             progbar.update(i + 1, values, finalize=True)
 
     policy_dir = os.path.join(agentDir, env_name)
