@@ -4,6 +4,8 @@ import keras.models
 from gym import envs
 import tensorflow as tf
 import os
+from pynput import keyboard
+from pynput.keyboard import Key
 
 import numpy as np
 
@@ -78,7 +80,44 @@ def viewEnv(envName="CartPole-v0", steps=500):
         _, reward, done, _ = env.step(env.action_space.sample())
         if done:
             print(f"Zakończono po {i} krokach")
+
+    env.close()
+
+
+lastKeyPressed = None
+listener = None
+
+
+def play(envName="CartPole-v0", actionKeys=None, speed=0.1):
+    if actionKeys is None:
+        actionKeys = {Key.right: 1, Key.left: 0}
+
+    global lastKeyPressed
+
+    env = gym.make(envName)
+    env.reset()
+
+    i = 0
+    gameRun = True
+
+    while gameRun:
+        env.render()
+        time.sleep(speed)
+
+        for key in actionKeys:
+            if lastKeyPressed == key:
+                _, reward, done, _ = env.step(actionKeys[key])
+                print(reward)
+                if done:
+                    print(f"Zakończono po {i} krokach nagroda {reward}")
+                    env.reset()
+                    break
+
+        if lastKeyPressed == 'q':
             break
+
+        lastKeyPressed = None
+        i += 1
 
     env.close()
 
@@ -105,6 +144,28 @@ def loadModel(modelDir: str, modelName: str) -> tf.keras.Model:
     return keras.models.load_model(os.path.join(modelDir, modelName))
 
 
+def on_press(key):
+    global lastKeyPressed
+    try:
+        lastKeyPressed = key
+        if key.char == 'q':
+            print("Exit game")
+            exit()
+    except AttributeError:
+        # print('special key {0} pressed'.format(
+        #    key))
+        lastKeyPressed = key
+
+
+listener = keyboard.Listener(
+    on_press=on_press,
+)
+
+
+def runKeyboard():
+    listener.start()
+
+
 if __name__ == "__main__":
     cartpole = "CartPole-v1"
     lunar_lander = "LunarLander-v2"
@@ -115,4 +176,8 @@ if __name__ == "__main__":
 
     # renderEnvModel(cartpole, loadModel(modelsDir, envName))
 
-    viewEnv(lunar_lander)
+    # viewEnv(lunar_lander)
+
+    runKeyboard()
+    #play(cartpole,{Key.right:1,Key.left:0})
+    play(lunar_lander, {None: 0, Key.right: 1, Key.down: 2, Key.left: 3},speed=0.2)

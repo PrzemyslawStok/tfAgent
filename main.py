@@ -113,7 +113,7 @@ def printTime(start_time: float, text: str = "") -> float:
 def main(argv):
     start_time = timeit.default_timer()
 
-    num_iterations = 10000
+    num_iterations = 2000
 
     replay_buffer_max_length = 100000
     batch_size = 64
@@ -231,10 +231,10 @@ def main(argv):
 
     for i in range(num_iterations):
 
-        final_time_step, _ = driver1.run(final_time_step)
+        # final_time_step, _ = driver1.run(final_time_step)
         # start_time = printTime(start_time, "driver run")
 
-        #final_time_step = collect_episode(train_env, collect_policy, 1, replay_observer + train_metrics)
+        final_time_step = collect_episode(train_env, collect_policy, 1, replay_observer + train_metrics)
         # train_env.reset()
 
         iterator = iter(replay_buffer.as_dataset(
@@ -247,10 +247,13 @@ def main(argv):
 
         train_loss = agent.train(experience=experience)
 
-        # replay_buffer.clear()
+        replay_buffer.clear()
         # start_time = printTime(start_time, "train agent")
 
         step = agent.train_step_counter.numpy()
+
+        if train_metrics[2].result().numpy()>180:
+            break
 
         if step % log_interval == 0:
             episode_len.append(train_metrics[3].result().numpy())
