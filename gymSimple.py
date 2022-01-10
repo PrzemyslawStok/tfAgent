@@ -179,5 +179,4 @@ if __name__ == "__main__":
     # viewEnv(lunar_lander)
 
     runKeyboard()
-    #play(cartpole,{Key.right:1,Key.left:0})
-    play(lunar_lander, {None: 0, Key.right: 1, Key.down: 2, Key.left: 3},speed=0.1)
+    play(lunar_lander, {None: 0, Key.right: 1, Key.down: 2, Key.left: 3}, speed=0.1)
