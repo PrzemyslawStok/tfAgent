@@ -112,6 +112,7 @@ def play(envName="CartPole-v0", actionKeys=None, speed=0.1):
                 if done:
                     print(f"Zakończono po {i} krokach nagroda: {epizode_reward}")
                     epizode_reward=0
+
                     env.reset()
                     break
 
