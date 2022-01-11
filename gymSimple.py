@@ -99,6 +99,7 @@ def play(envName="CartPole-v0", actionKeys=None, speed=0.1):
 
     i = 0
     gameRun = True
+    epizode_reward = 0
 
     while gameRun:
         env.render()
@@ -107,9 +108,10 @@ def play(envName="CartPole-v0", actionKeys=None, speed=0.1):
         for key in actionKeys:
             if lastKeyPressed == key:
                 _, reward, done, _ = env.step(actionKeys[key])
-                print(reward)
+                epizode_reward+=reward
                 if done:
-                    print(f"Zakończono po {i} krokach nagroda {reward}")
+                    print(f"Zakończono po {i} krokach nagroda: {epizode_reward}")
+                    epizode_reward=0
                     env.reset()
                     break
 
