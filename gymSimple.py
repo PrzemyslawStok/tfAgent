@@ -20,7 +20,7 @@ agentDir = "savedAgents"
 modelsDir = "savedModels"
 
 
-def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=False, closeEnv=False, steps=200, epizodes=1):
+def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=True, closeEnv=False, steps=1000, epizodes=1):
     env = gym.make(envName)
     env1 = env.unwrapped
 
@@ -33,6 +33,7 @@ def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=False, closeEnv=F
     for episode in range(epizodes):
         observation = env.reset()
         reward = 0.0
+        episode_reward = reward
 
         for i in range(steps):
             env.render()
@@ -44,9 +45,10 @@ def renderEnv(envName="CartPole-v0", policy=None, doneAfterEnd=False, closeEnv=F
             observation, reward, done, info = env.step(action.numpy()[0])
 
             reward = np.float32(reward)
+            episode_reward+=reward
 
             if doneAfterEnd and done:
-                print(f"Episode finished after {i + 1} timestep.")
+                print(f"Episode finished after {i + 1} timestep reward: {episode_reward}.")
                 break
     if closeEnv:
         env.close()
@@ -175,11 +177,11 @@ if __name__ == "__main__":
     montezuma = "MontezumaRevenge-ram-v0"
 
     envName = lunar_lander
-    # renderEnv(envName, loadAgent(agentDir, envName))
+    renderEnv(envName, loadAgent(agentDir, envName))
 
     # renderEnvModel(cartpole, loadModel(modelsDir, envName))
 
     # viewEnv(lunar_lander)
 
-    runKeyboard()
-    play(lunar_lander, {None: 0, Key.right: 1, Key.down: 2, Key.left: 3}, speed=0.1)
+    #runKeyboard()
+    #play(lunar_lander, {None: 0, Key.right: 1, Key.down: 2, Key.left: 3}, speed=0.1)

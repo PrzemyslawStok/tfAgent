@@ -171,13 +171,19 @@ def main(argv):
         train_env.action_spec(),
         fc_layer_params=fc_layer_params)
 
+    target_q_net = q_network.QNetwork(
+        train_env.observation_spec(),
+        train_env.action_spec(),
+        fc_layer_params=fc_layer_params)
+
     agent = dqn_agent.DqnAgent(
         train_env.time_step_spec(),
         train_env.action_spec(),
         q_network=q_net,
         optimizer=optimizer,
         td_errors_loss_fn=common.element_wise_squared_loss,
-        train_step_counter=train_step_counter)
+        train_step_counter=train_step_counter,
+        target_q_network=target_q_net)
 
     agent.initialize()
 
@@ -252,9 +258,6 @@ def main(argv):
 
         step = agent.train_step_counter.numpy()
 
-        if train_metrics[2].result().numpy()>180:
-            break
-
         if step % log_interval == 0:
             episode_len.append(train_metrics[3].result().numpy())
             values = [(metrics_names[0], train_metrics[2].result().numpy()), (metrics_names[1], train_metrics[3].result().numpy())]
@@ -262,9 +265,10 @@ def main(argv):
             # plot.plot(episode_len)
             # plot.show()
 
-        if i == num_iterations - 1:
+        if i == num_iterations - 1 or train_metrics[2].result().numpy()>50:
             values = [(metrics_names[0], train_metrics[2].result().numpy()), (metrics_names[1], train_metrics[3].result().numpy())]
             progbar.update(i + 1, values, finalize=True)
+            break
 
     policy_dir = os.path.join(agentDir, env_name)
     tf_policy_saver = policy_saver.PolicySaver(agent.policy)
