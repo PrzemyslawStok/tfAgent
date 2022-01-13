@@ -175,14 +175,13 @@ if __name__ == "__main__":
     cartpole = "CartPole-v1"
     lunar_lander = "LunarLander-v2"
     montezuma = "MontezumaRevenge-ram-v0"
-    taxi = "Taxi-v3"
 
     envName = lunar_lander
-    # renderEnv(envName, loadAgent(agentDir, envName))
+    renderEnv(envName, loadAgent(agentDir, envName))
 
     # renderEnvModel(cartpole, loadModel(modelsDir, envName))
 
-    viewEnv(taxi)
+    # viewEnv(lunar_lander)
 
     #runKeyboard()
     #play(lunar_lander, {None: 0, Key.right: 1, Key.down: 2, Key.left: 3}, speed=0.1)
