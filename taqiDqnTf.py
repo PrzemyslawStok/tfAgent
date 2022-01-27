@@ -56,6 +56,7 @@ class Agent:
 
     def retrain(self, batch_size):
         minibatch = random.sample(self.experience_replay, batch_size)
+        print(f"experience size: {len(self.experience_replay)}")
 
         for state, action, reward, next_state, terminated in minibatch:
 
@@ -70,7 +71,10 @@ class Agent:
             self.q_network.fit(state, target, epochs=1, verbose=0)
 
 if __name__ == "__main__":
-    enviroment = gym.make("Taxi-v3").env
+    cartpole = "CartPole-v1"
+    taxi3 = "Taxi-v3"
+    envName = taxi3
+    enviroment = gym.make(envName).env
     enviroment.render()
 
     print('Number of states: {}'.format(enviroment.observation_space.n))
