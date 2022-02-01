@@ -7,7 +7,7 @@ import progressbar
 import gym
 
 from tensorflow.keras import Model, Sequential
-from tensorflow.keras.layers import Dense, Embedding, Reshape
+from tensorflow.keras.layers import Dense, Embedding, Reshape, InputLayer
 from tensorflow.keras.optimizers import Adam
 
 
@@ -16,7 +16,7 @@ class Agent:
 
         # Initialize atributes
         self._state_size = np.shape(enviroment.observation_space)[0]
-        #self._state_size = enviroment.observation_space.n
+        # self._state_size = enviroment.observation_space.n
 
         self._action_size = enviroment.action_space.n
         self._optimizer = optimizer
@@ -37,8 +37,9 @@ class Agent:
 
     def _build_compile_model(self):
         model = Sequential()
-        model.add(Embedding(self._state_size, 10, input_length=1))
-        model.add(Reshape((10,)))
+        # model.add(Embedding(self._state_size, 10, input_length=1))
+        # model.add(Reshape((10,)))
+        model.add(InputLayer(input_shape=(self._state_size,)))
         model.add(Dense(50, activation='relu'))
         model.add(Dense(50, activation='relu'))
         model.add(Dense(self._action_size, activation='linear'))
@@ -52,25 +53,29 @@ class Agent:
     def act(self, state):
         if np.random.rand() <= self.epsilon:
             return enviroment.action_space.sample()
-
+        state = np.expand_dims(state, axis=0)
         q_values = self.q_network.predict(state)
         return np.argmax(q_values[0])
 
     def retrain(self, batch_size):
         minibatch = random.sample(self.experience_replay, batch_size)
-        print(f"experience size: {len(self.experience_replay)}")
+        #print(f"experience size: {len(self.experience_replay)}")
 
         for state, action, reward, next_state, terminated in minibatch:
 
+            state = np.expand_dims(state, axis=0)
             target = self.q_network.predict(state)
 
             if terminated:
                 target[0][action] = reward
             else:
+                next_state = np.expand_dims(next_state, axis=0)
                 t = self.target_network.predict(next_state)
+                target_old = np.copy(target)
                 target[0][action] = reward + self.gamma * np.amax(t)
 
             self.q_network.fit(state, target, epochs=1, verbose=0)
+
 
 if __name__ == "__main__":
     cartpole = "CartPole-v1"
@@ -79,7 +84,7 @@ if __name__ == "__main__":
 
     envName = lunar_lander
     enviroment = gym.make(envName).env
-    #enviroment.render()
+    # enviroment.render()
 
     print('Number of states: {}'.format(np.shape(enviroment.observation_space)[0]))
     print('Number of actions: {}'.format(enviroment.action_space.n))
@@ -95,7 +100,7 @@ if __name__ == "__main__":
     for e in range(0, num_of_episodes):
         # Reset the enviroment
         state = enviroment.reset()
-        #state = np.reshape(state, [1, 1])
+        # state = np.reshape(state, [1, 1])
 
         # Initialize variables
         reward = 0
@@ -111,7 +116,7 @@ if __name__ == "__main__":
 
             # Take action
             next_state, reward, terminated, info = enviroment.step(action)
-            #next_state = np.reshape(next_state, [1, 1])
+            # next_state = np.reshape(next_state, [1, 1])
             agent.store(state, action, reward, next_state, terminated)
 
             state = next_state
@@ -122,6 +127,7 @@ if __name__ == "__main__":
 
             if len(agent.experience_replay) > batch_size:
                 agent.retrain(batch_size)
+                agent.experience_replay.clear()
 
             if timestep % 10 == 0:
                 bar.update(timestep / 10 + 1)
