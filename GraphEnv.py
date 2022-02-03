@@ -37,32 +37,18 @@ class GraphEnv(py_environment.PyEnvironment):
         self._episode_ended = False
         return ts.restart(np.array(self._state, dtype=np.int32))
 
-    def move(self, action):
-        coordinates = np.random.randint(0, 5)
-        self._state = [0, 1, 0, 1]
-
     def _step(self, action):
+        state, reward, done, iteration = self._envBase.step_probabilistic_resources(action)
+
         if self._episode_ended:
             return self.reset()
 
-        self.move(action)
-
-        if self.game_over():
+        if done:
             self._episode_ended = True
-
-        if self._episode_ended:
-            if self.game_over():
-                reward = 100
-            else:
-                reward = 0
             return ts.termination(np.array(self._state, dtype=np.int32), reward)
         else:
             return ts.transition(
-                np.array(self._state, dtype=np.int32), reward=0, discount=0.9)
-
-    def game_over(self):
-        row, col, frow, fcol = self._state[0], self._state[1], self._state[2], self._state[3]
-        return row == frow and col == fcol
+                np.array(self._state, dtype=np.int32), reward=reward, discount=0.9)
 
 
 if __name__ == '__main__':
