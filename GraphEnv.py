@@ -11,7 +11,7 @@ class GraphEnv(py_environment.PyEnvironment):
         super().__init__(handle_auto_reset=handle_auto_reset)
 
         self._envBase = EnvBase(no_of_prim_requirements, no_of_resources, no_of_motors, env_rules,
-                 list_of_non_renewable_resources, resource_use_limit, max_iterations)
+                                list_of_non_renewable_resources, resource_use_limit, max_iterations)
 
         self._action_spec = array_spec.BoundedArraySpec(
             shape=(), dtype=np.int32, minimum=0, maximum=3, name='action')
@@ -60,5 +60,33 @@ class GraphEnv(py_environment.PyEnvironment):
 
 
 if __name__ == '__main__':
-    env = GraphEnv()
+    prime_requirements_indexes = [8, 9, 10]
+
+    env_rules = {0: [[3, 3]],
+                 1: [[4, 4]],
+                 2: [[5, 5]],
+                 3: [],
+                 4: [[6, 6]],
+                 5: [[4, 7]],
+                 6: [[7, 8]],
+                 7: [[6, 9]],
+                 8: [[0, 0]],
+                 9: [[1, 1]],
+                 10: [[2, 2]],
+                 11: []}
+
+    motor_output = ['m_0', 'm_1', 'm_2', 'm_3', 'm_4', 'm_5', 'm_6', 'm_7', 'm_8', 'm_9']
+
+    list_of_non_renewable_resources = [3]
+
+    no_of_prim_requirements = len(prime_requirements_indexes)
+    no_of_resources = len(env_rules) - no_of_prim_requirements - 1
+    no_of_motors = len(motor_output)
+
+    RESOURCE_USE_LIMIT = np.array([15, 15, 15, 9999999, 15, 15, 15, 15])
+    MAX_ITERATIONS = 10000
+
+    env = GraphEnv(no_of_prim_requirements, no_of_resources, no_of_motors, env_rules, list_of_non_renewable_resources,
+                   RESOURCE_USE_LIMIT, MAX_ITERATIONS)
+
     utils.validate_py_environment(env, episodes=5)
