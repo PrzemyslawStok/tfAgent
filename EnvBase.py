@@ -1,5 +1,6 @@
 import numpy as np
 
+
 class EnvBase:
 
     def __init__(self, no_of_prim_requirements, no_of_resources, no_of_motors, env_rules,
