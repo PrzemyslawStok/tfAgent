@@ -14,10 +14,16 @@ class GraphEnv(py_environment.PyEnvironment):
                                 list_of_non_renewable_resources, resource_use_limit, max_iterations)
 
         self._action_spec = array_spec.BoundedArraySpec(
-            shape=(), dtype=np.int32, minimum=0, maximum=3, name='action')
+            shape=(), dtype=np.int32, minimum=0, maximum=self._envBase.getActionSpace(), name='action')
+
+        obeservation_space_length = self._envBase.getObservationSpace()
+
         self._observation_spec = array_spec.BoundedArraySpec(
-            shape=(4,), dtype=np.int32, minimum=[0, 0, 0, 0], maximum=[5, 5, 5, 5], name='observation')
-        self._state = [0, 0, 5, 5]  # represent the (row, col, frow, fcol) of the player and the finish
+            shape=(obeservation_space_length,), dtype=np.int32,
+            minimum=list(np.zeros([obeservation_space_length], dtype=np.int32)),
+            maximum=list(2 * np.ones([obeservation_space_length], dtype=np.int32)), name='observation')
+
+        self._state = self._envBase.reset().astype(dtype=np.int32)
         self._episode_ended = False
 
     def action_spec(self):
@@ -27,7 +33,7 @@ class GraphEnv(py_environment.PyEnvironment):
         return self._observation_spec
 
     def _reset(self):
-        self._state = [0, 0, 5, 5]
+        self._state = self._envBase.reset().astype(dtype=np.int32)
         self._episode_ended = False
         return ts.restart(np.array(self._state, dtype=np.int32))
 

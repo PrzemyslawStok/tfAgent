@@ -345,3 +345,9 @@ class EnvBase:
 
         # returns state
         return np.array(self.prim_requirements.tolist() + self.resources_present.tolist())
+
+    def getActionSpace(self):
+        return self.action_space___n
+
+    def getObservationSpace(self):
+        return self.observation_space___n
