@@ -40,10 +40,11 @@ class GraphEnv(py_environment.PyEnvironment):
 
     def _step(self, action):
         state, reward, done, iteration = self._envBase.step_probabilistic_resources(action)
-        print(f"iteration {iteration}")
 
         if done:
-            return ts.termination(np.array(self._state, dtype=np.int32), reward)
+            time_step =  ts.termination(np.array(self._state, dtype=np.int32), reward)
+            self.reset()
+            return time_step
         else:
             return ts.transition(
                 np.array(self._state, dtype=np.int32), reward=reward, discount=0.9)
