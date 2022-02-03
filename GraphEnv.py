@@ -75,7 +75,7 @@ if __name__ == '__main__':
     no_of_motors = len(motor_output)
 
     RESOURCE_USE_LIMIT = np.array([15, 15, 15, 9999999, 15, 15, 15, 15])
-    MAX_ITERATIONS = 10
+    MAX_ITERATIONS = 1000
 
     env = GraphEnv(no_of_prim_requirements, no_of_resources, no_of_motors, env_rules, list_of_non_renewable_resources,
                    RESOURCE_USE_LIMIT, MAX_ITERATIONS)
