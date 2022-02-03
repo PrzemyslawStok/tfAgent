@@ -9,7 +9,7 @@ class EnvBase:
         self.episode_finished = False
 
         self.prim_requirements_thresholds = 1 * np.ones(no_of_prim_requirements)
-        self.prim_requirements_die_level = np.zeros(no_of_prim_requirements)
+        self.prim_requirements_finish_level = np.zeros(no_of_prim_requirements)
 
         # prim requirement increase rate
         self.tc = np.ones(no_of_prim_requirements)
@@ -277,11 +277,11 @@ class EnvBase:
         if self.max_iterations == self.iteration:
             self.episode_finished = True
 
-        # if len(self.prim_requirements_die_level[self.prim_requirements_die_level>0])>0:
-        if np.any(self.prim_requirements_die_level) > 0:
-            prequirements_compare = (self.prim_requirements == self.prim_requirements_die_level)
+        # if len(self.prim_requirements_finish_level[self.prim_requirements_finish_level>0])>0:
+        if np.any(self.prim_requirements_finish_level) > 0:
+            prequirements_compare = (self.prim_requirements == self.prim_requirements_finish_level)
             if np.any(prequirements_compare):
-                # one of the prim requirements reached max level, agent dies
+                # one of the prim requirements reached max level, agent finishs
                 self.episode_finished = True
 
                 # 3x state variables and reward
@@ -321,11 +321,11 @@ class EnvBase:
         if self.max_iterations == self.iteration:
             self.episode_finished = True
 
-        # if len(self.prim_requirements_die_level[self.prim_requirements_die_level>0])>0:
-        if np.any(self.prim_requirements_die_level) > 0:
-            prequirements_compare = (self.prim_requirements == self.prim_requirements_die_level)
+        # if len(self.prim_requirements_finish_level[self.prim_requirements_finish_level>0])>0:
+        if np.any(self.prim_requirements_finish_level) > 0:
+            prequirements_compare = (self.prim_requirements == self.prim_requirements_finish_level)
             if np.any(prequirements_compare):
-                # one of the prim requirements reached max level, agent dies
+                # one of the prim requirements reached max level, agent finishs
                 self.episode_finished = True
 
                 # 3x state variables and reward
