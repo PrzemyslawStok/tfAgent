@@ -14,7 +14,7 @@ class GraphEnv(py_environment.PyEnvironment):
                                 list_of_non_renewable_resources, resource_use_limit, max_iterations)
 
         self._action_spec = array_spec.BoundedArraySpec(
-            shape=(), dtype=np.int32, minimum=0, maximum=self._envBase.getActionSpace(), name='action')
+            shape=(), dtype=np.int32, minimum=0, maximum=self._envBase.getActionSpace() - 1, name='action')
 
         obeservation_space_length = self._envBase.getObservationSpace()
 
@@ -24,7 +24,9 @@ class GraphEnv(py_environment.PyEnvironment):
             maximum=list(2 * np.ones([obeservation_space_length], dtype=np.int32)), name='observation')
 
         self._state = self._envBase.reset().astype(dtype=np.int32)
-        self._episode_ended = False
+
+    def sample(self):
+        return self._envBase.action_space___sample()
 
     def action_spec(self):
         return self._action_spec
@@ -34,17 +36,12 @@ class GraphEnv(py_environment.PyEnvironment):
 
     def _reset(self):
         self._state = self._envBase.reset().astype(dtype=np.int32)
-        self._episode_ended = False
         return ts.restart(np.array(self._state, dtype=np.int32))
 
     def _step(self, action):
         state, reward, done, iteration = self._envBase.step_probabilistic_resources(action)
 
-        if self._episode_ended:
-            return self.reset()
-
         if done:
-            self._episode_ended = True
             return ts.termination(np.array(self._state, dtype=np.int32), reward)
         else:
             return ts.transition(
@@ -76,9 +73,15 @@ if __name__ == '__main__':
     no_of_motors = len(motor_output)
 
     RESOURCE_USE_LIMIT = np.array([15, 15, 15, 9999999, 15, 15, 15, 15])
-    MAX_ITERATIONS = 10000
+    MAX_ITERATIONS = 100
 
     env = GraphEnv(no_of_prim_requirements, no_of_resources, no_of_motors, env_rules, list_of_non_renewable_resources,
                    RESOURCE_USE_LIMIT, MAX_ITERATIONS)
+
+    state = env.reset()
+
+    for i in range(5):
+        state = env.step(env.sample())
+        print(state)
 
     utils.validate_py_environment(env, episodes=5)
