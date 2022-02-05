@@ -15,8 +15,8 @@ replay_buffer_max_length = 100000
 batch_size = 64
 learning_rate = 1e-3
 
-num_iterations = 10_000
-log_interval  = 100
+num_iterations = 100
+log_interval  = 10
 
 
 def create_qnet(fc_layer_params: tuple, train_env: tf_py_environment) -> q_network:
