@@ -49,8 +49,7 @@ class GraphEnv(py_environment.PyEnvironment):
             return ts.transition(
                 np.array(self._state, dtype=np.int32), reward=reward, discount=0.9)
 
-
-if __name__ == '__main__':
+def sampleEnv()->GraphEnv:
     prime_requirements_indexes = [8, 9, 10]
 
     env_rules = {0: [[3, 3]],
@@ -79,6 +78,11 @@ if __name__ == '__main__':
 
     env = GraphEnv(no_of_prim_requirements, no_of_resources, no_of_motors, env_rules, list_of_non_renewable_resources,
                    RESOURCE_USE_LIMIT, MAX_ITERATIONS)
+    return env
+
+if __name__ == '__main__':
+
+    env: GraphEnv = sampleEnv()
 
     state = env.reset()
 
