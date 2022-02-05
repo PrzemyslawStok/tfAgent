@@ -3,6 +3,7 @@ from tf_agents.agents.dqn import dqn_agent
 from tf_agents.environments import tf_py_environment
 
 from tf_agents.networks import q_network
+from tf_agents.replay_buffers import tf_uniform_replay_buffer
 from tf_agents.utils import common
 
 from GraphEnv import GraphEnv, sampleEnv
@@ -21,20 +22,17 @@ def create_qnet(fc_layer_params: tuple, train_env: tf_py_environment) -> q_netwo
 
 if __name__ == "__main__":
     # można utworzyć nowe środowidko funkcja sample env dodaje parametry, które były w google colab
-    train_env: GraphEnv = sampleEnv()
-
-    train_env_tf = tf_py_environment.TFPyEnvironment(
-        train_env
-    )
+    train_env: tf_py_environment = tf_py_environment.TFPyEnvironment(sampleEnv())
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=learning_rate)
     train_step_counter = tf.Variable(0)
 
+
     fc_layer_params = (64, 256)
-    q_net = create_qnet(fc_layer_params, train_env_tf)
+    q_net = create_qnet(fc_layer_params, train_env)
 
     # tutaj trzeba uważać agent powinien sam utworzyć dodatkową sieć ale podobno może nie zadziałać
-    target_q_net = create_qnet(fc_layer_params, train_env_tf)
+    target_q_net = create_qnet(fc_layer_params, train_env)
 
     agent = dqn_agent.DqnAgent(
         train_env.time_step_spec(),
@@ -46,3 +44,8 @@ if __name__ == "__main__":
         target_q_network=target_q_net)
 
     agent.initialize()
+
+    replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
+        data_spec=agent.collect_data_spec,
+        batch_size=train_env.batch_size,
+        max_length=replay_buffer_max_length)
