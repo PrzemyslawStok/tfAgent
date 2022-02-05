@@ -16,6 +16,7 @@ batch_size = 64
 learning_rate = 1e-3
 
 num_iterations = 10_000
+log_interval  = 100
 
 
 def create_qnet(fc_layer_params: tuple, train_env: tf_py_environment) -> q_network:
@@ -80,7 +81,15 @@ if __name__ == "__main__":
 
     final_time_step, policy_state = driver.run()
 
+    episode_len = []
+
     for i in range(num_iterations):
         final_time_step, _ = driver.run(final_time_step)
 
         experience, _ = next(dataset_iterator)
+
+        step = agent.train_step_counter.numpy()
+        if step % log_interval == 0:
+            episode_len.append(train_metrics[3].result().numpy())
+            values = [(metrics_names[0], train_metrics[2].result().numpy()), (metrics_names[1], train_metrics[3].result().numpy())]
+            progbar.update(i + 1, values)
