@@ -1,8 +1,8 @@
 import numpy as np
-from tf_agents.environments import py_environment, utils, wrappers, tf_py_environment
+from tf_agents.environments import py_environment, utils
 from tf_agents.specs import array_spec
 from tf_agents.trajectories import time_step as ts
-from EnvBase import EnvBase
+from CustomEnv.EnvBase import EnvBase
 
 
 class GraphEnv(py_environment.PyEnvironment):
@@ -42,15 +42,14 @@ class GraphEnv(py_environment.PyEnvironment):
         state, reward, done, iteration = self._envBase.step_probabilistic_resources(action)
 
         if done:
-            time_step =  ts.termination(np.array(self._state, dtype=np.int32), reward)
+            time_step = ts.termination(np.array(self._state, dtype=np.int32), reward)
             self.reset()
             return time_step
         else:
             return ts.transition(
                 np.array(self._state, dtype=np.int32), reward=reward, discount=0.9)
 
-
-if __name__ == '__main__':
+def sampleEnv()->GraphEnv:
     prime_requirements_indexes = [8, 9, 10]
 
     env_rules = {0: [[3, 3]],
@@ -79,6 +78,11 @@ if __name__ == '__main__':
 
     env = GraphEnv(no_of_prim_requirements, no_of_resources, no_of_motors, env_rules, list_of_non_renewable_resources,
                    RESOURCE_USE_LIMIT, MAX_ITERATIONS)
+    return env
+
+if __name__ == '__main__':
+
+    env: GraphEnv = sampleEnv()
 
     state = env.reset()
 
