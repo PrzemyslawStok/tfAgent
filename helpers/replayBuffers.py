@@ -41,8 +41,6 @@ if __name__ == "__main__":
 
     for i in range(100):
         replay_deque.append(value)
+
     replay_buffer.add_batch(tf.stack(random.sample(replay_deque, batch_size)))
 
-
-
-    print(2 * [1, 2])
