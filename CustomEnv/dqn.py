@@ -16,10 +16,11 @@ replay_buffer_max_length = 100000
 batch_size = 32
 learning_rate = 1e-3
 
-num_iterations = 100
+num_iterations = 1000
 log_interval  = 10
 
-random_policy = False
+random_policy = True
+
 
 def create_qnet(fc_layer_params: tuple, train_env: tf_py_environment) -> q_network:
     return q_network.QNetwork(
@@ -86,12 +87,14 @@ if __name__ == "__main__":
     metrics_names = ['reward', 'length']
     progbar = Progbar(num_iterations, stateful_metrics=metrics_names)
 
+    final_time_step, policy_state = driver.run()
+
     episode_len = []
 
     agent.train = common.function(agent.train)
 
     for i in range(num_iterations):
-        final_time_step, _ = driver.run()
+        final_time_step, _ = driver.run(final_time_step)
 
         experience, _ = next(dataset_iterator)
 
