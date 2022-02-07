@@ -21,6 +21,7 @@ if __name__ == "__main__":
     print(replay_buffer.data_spec)
 
     value = tf.ones([3])
+
     batched1 = tf.expand_dims(value, axis=0)
     batched = tf.nest.map_structure(lambda t: tf.stack([t] * batch_size), value)
 
@@ -34,8 +35,6 @@ if __name__ == "__main__":
         value = tf.ones([3]) * i
         #batch = tf.nest.map_structure(lambda x: tf.stack[x] * batch_size, value)
         replay_buffer.add_batch(tf.stack([value]*batch_size))
-
-
 
     replay_deque = deque(maxlen=100)
 
