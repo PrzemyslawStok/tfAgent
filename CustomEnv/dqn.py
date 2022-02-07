@@ -6,18 +6,20 @@ from tf_agents.environments import tf_py_environment
 from tf_agents.metrics import tf_metrics
 
 from tf_agents.networks import q_network
+from tf_agents.policies import random_tf_policy
 from tf_agents.replay_buffers import tf_uniform_replay_buffer
 from tf_agents.utils import common
 
 from GraphEnv import sampleEnv
 
 replay_buffer_max_length = 100000
-batch_size = 64
+batch_size = 32
 learning_rate = 1e-3
 
 num_iterations = 100
 log_interval  = 10
 
+random_policy = False
 
 def create_qnet(fc_layer_params: tuple, train_env: tf_py_environment) -> q_network:
     return q_network.QNetwork(
@@ -71,25 +73,32 @@ if __name__ == "__main__":
         tf_metrics.AverageEpisodeLengthMetric(),
     ]
 
+    if random_policy:
+        policy = random_tf_policy.RandomTFPolicy(train_env.time_step_spec(),train_env.action_spec())
+    else:
+        policy = agent.collect_policy
+
     driver = dynamic_episode_driver.DynamicEpisodeDriver(train_env,
-                                                         agent.collect_policy,
+                                                         policy,
                                                          observers=replay_observer + train_metrics,
                                                          num_episodes=1)
 
     metrics_names = ['reward', 'length']
     progbar = Progbar(num_iterations, stateful_metrics=metrics_names)
 
-    final_time_step, policy_state = driver.run()
-
     episode_len = []
 
+    agent.train = common.function(agent.train)
+
     for i in range(num_iterations):
-        final_time_step, _ = driver.run(final_time_step)
+        final_time_step, _ = driver.run()
 
         experience, _ = next(dataset_iterator)
 
-        step = agent.train_step_counter.numpy()
-        if step % log_interval == 0:
+        if not random_policy:
+            agent.train(experience)
+
+        if i % log_interval == 0:
             episode_len.append(train_metrics[3].result().numpy())
             values = [(metrics_names[0], train_metrics[2].result().numpy()), (metrics_names[1], train_metrics[3].result().numpy())]
             progbar.update(i + 1, values)
