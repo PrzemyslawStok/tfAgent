@@ -55,7 +55,7 @@ def replay_buffer_simple():
         batch_simple = tf.stack([value_simple] * size)
         replay_buffer_simple.add_batch(batch_simple)
 
-    print(replay_buffer_simple.get_next(5, 2))
+    print(replay_buffer_simple.get_next(5, 5))
 
 
 if __name__ == "__main__":
