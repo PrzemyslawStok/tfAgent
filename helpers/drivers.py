@@ -34,7 +34,23 @@ def stepDriver(env: tf_py_environment, replay_buffer: tf_uniform_replay_buffer.T
     episodes = tf_metrics.NumberOfEpisodes()
     reward = tf_metrics.AverageReturnMetric()
     driver_observers = [replay_buffer.add_batch, steps, episodes, reward]
-    driver = dynamic_step_driver.DynamicStepDriver(env, policy=policy, observers=driver_observers, num_steps=100_000)
+    driver = dynamic_step_driver.DynamicStepDriver(env, policy=policy, observers=driver_observers, num_steps=10)
+
+    initial_time_step = env.reset()
+    driver.run(initial_time_step)
+
+    print(f"reward: {reward.result().numpy()}")
+    print(f"steps: {steps.result().numpy()}")
+    print(f"episodes: {episodes.result().numpy()}")
+
+def epizodeDriver(env: tf_py_environment, replay_buffer: tf_uniform_replay_buffer.TFUniformReplayBuffer):
+    policy = random_tf_policy.RandomTFPolicy(action_spec=env.action_spec(), time_step_spec=env.time_step_spec())
+
+    steps = tf_metrics.EnvironmentSteps()
+    episodes = tf_metrics.NumberOfEpisodes()
+    reward = tf_metrics.AverageReturnMetric()
+    driver_observers = [replay_buffer.add_batch, steps, episodes, reward]
+    driver = dynamic_episode_driver.DynamicEpisodeDriver(env, policy=policy, observers=driver_observers, num_episodes=10)
 
     initial_time_step = env.reset()
     driver.run(initial_time_step)
@@ -51,4 +67,10 @@ if __name__ == "__main__":
     tf_env: tf_py_environment = tf_py_environment.TFPyEnvironment(sampleEnv())
 
     replay_buffer = create_buffer(tf_env)
+
     stepDriver(tf_env, replay_buffer)
+
+    data_set = iter(replay_buffer.as_dataset(sample_batch_size=1, num_steps=1))
+
+    #for i in range(100):
+    print(next(data_set))
