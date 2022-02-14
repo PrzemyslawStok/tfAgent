@@ -142,16 +142,17 @@ if __name__ == '__main__':
         random_policy = random_py_policy.RandomPyPolicy(
             collect_env.time_step_spec(), collect_env.action_spec())
 
+        env_step_metric = py_metrics.EnvironmentSteps()
+
         initial_collect_actor = actor.Actor(
             collect_env,
             random_policy,
             train_step,
-            steps_per_run=initial_collect_steps,
-            observers=[replay_observer])
+            steps_per_run=100,
+            observers=[env_step_metric, replay_observer])
 
         initial_collect_actor.run()
 
-        env_step_metric = py_metrics.EnvironmentSteps()
         collect_actor = actor.Actor(
             collect_env,
             collect_policy,
@@ -169,7 +170,3 @@ if __name__ == '__main__':
             metrics=actor.eval_metrics(num_eval_episodes),
             summary_dir=os.path.join(tempdir, 'eval'),
         )
-
-
-
-
