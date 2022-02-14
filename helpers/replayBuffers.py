@@ -57,6 +57,12 @@ def replay_buffer_simple():
 
     print(replay_buffer_simple.get_next(5, 5))
 
+    data_set = replay_buffer_simple.as_dataset(sample_batch_size=1, num_steps=2)
+    iterator = iter(data_set)
+
+    for i in range(100):
+        print(next(iterator))
+
 
 if __name__ == "__main__":
     replay_buffer_simple()
