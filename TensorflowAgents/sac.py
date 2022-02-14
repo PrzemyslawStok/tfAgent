@@ -10,7 +10,7 @@ from matplotlib import pyplot as plot
 from tensorflow.keras.utils import Progbar
 from tf_agents.agents.ddpg import critic_network
 from tf_agents.agents.dqn import dqn_agent
-from tf_agents.agents.sac import tanh_normal_projection_network
+from tf_agents.agents.sac import tanh_normal_projection_network, sac_agent
 from tf_agents.drivers import dynamic_step_driver, dynamic_episode_driver, py_driver
 from tf_agents.environments import ParallelPyEnvironment, suite_pybullet
 from tf_agents.environments import suite_gym
@@ -96,3 +96,25 @@ if __name__ == '__main__':
                 tanh_normal_projection_network.TanhNormalProjectionNetwork))
 
         train_step = train_utils.create_train_step()
+
+        tf_agent = sac_agent.SacAgent(
+            time_step_spec,
+            action_spec,
+            actor_network=actor_net,
+            critic_network=critic_net,
+            actor_optimizer=tf.keras.optimizers.Adam(
+                learning_rate=actor_learning_rate),
+            critic_optimizer=tf.keras.optimizers.Adam(
+                learning_rate=critic_learning_rate),
+            alpha_optimizer=tf.keras.optimizers.Adam(
+                learning_rate=alpha_learning_rate),
+            target_update_tau=target_update_tau,
+            target_update_period=target_update_period,
+            td_errors_loss_fn=tf.math.squared_difference,
+            gamma=gamma,
+            reward_scale_factor=reward_scale_factor,
+            train_step_counter=train_step)
+
+        tf_agent.initialize()
+
+
