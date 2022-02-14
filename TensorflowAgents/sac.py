@@ -123,7 +123,7 @@ if __name__ == '__main__':
             batch_size=1,
             max_length=replay_buffer_capacity)
 
-        replay_observer = [replay_buffer.add_batch]
+        replay_observer = replay_buffer.add_batch
 
         dataset = replay_buffer.as_dataset(
             sample_batch_size=batch_size,
@@ -160,6 +160,16 @@ if __name__ == '__main__':
             metrics=actor.collect_metrics(10),
             summary_dir=os.path.join(tempdir, learner.TRAIN_DIR),
             observers=[replay_observer, env_step_metric])
+
+        eval_actor = actor.Actor(
+            eval_env,
+            eval_policy,
+            train_step,
+            episodes_per_run=num_eval_episodes,
+            metrics=actor.eval_metrics(num_eval_episodes),
+            summary_dir=os.path.join(tempdir, 'eval'),
+        )
+
 
 
 
