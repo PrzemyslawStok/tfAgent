@@ -233,7 +233,7 @@ def main(argv):
     # compute_avg_return(train_env, agent.policy, num_eval_episodes)
     # start_time = printTime(start_time, "compute average")
 
-    agent.train = common.function(agent.train)
+ #   agent.train = common.function(agent.train)
 
     for i in range(num_iterations):
 
