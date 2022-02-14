@@ -120,7 +120,7 @@ if __name__ == '__main__':
 
         replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
             data_spec=tf_agent.collect_data_spec,
-            batch_size=1,
+            batch_size=2,
             max_length=replay_buffer_capacity)
 
         replay_observer = replay_buffer.add_batch
