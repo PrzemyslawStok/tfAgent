@@ -15,11 +15,12 @@ from tf_agents.drivers import dynamic_step_driver, dynamic_episode_driver, py_dr
 from tf_agents.environments import ParallelPyEnvironment, suite_pybullet
 from tf_agents.environments import suite_gym
 from tf_agents.environments import tf_py_environment
-from tf_agents.metrics import tf_metrics
+from tf_agents.metrics import tf_metrics, py_metrics
 from tf_agents.networks import q_network, actor_distribution_network
-from tf_agents.policies import random_tf_policy, policy_saver, py_tf_eager_policy
+from tf_agents.policies import random_tf_policy, policy_saver, py_tf_eager_policy, random_py_policy
 from tf_agents.replay_buffers import tf_uniform_replay_buffer
 from tf_agents.specs import tensor_spec
+from tf_agents.train import actor, learner
 from tf_agents.train.utils import strategy_utils, spec_utils, train_utils
 from tf_agents.utils import common
 
@@ -66,7 +67,7 @@ if __name__ == '__main__':
     collect_env = suite_pybullet.load(env_name)
     eval_env = suite_pybullet.load(env_name)
 
-    use_gpu = True
+    use_gpu = False
     strategy = strategy_utils.get_strategy(tpu=False, use_gpu=use_gpu)
 
     observation_spec, action_spec, time_step_spec = (
@@ -116,5 +117,49 @@ if __name__ == '__main__':
             train_step_counter=train_step)
 
         tf_agent.initialize()
+
+        replay_buffer = tf_uniform_replay_buffer.TFUniformReplayBuffer(
+            data_spec=tf_agent.collect_data_spec,
+            batch_size=1,
+            max_length=replay_buffer_capacity)
+
+        replay_observer = [replay_buffer.add_batch]
+
+        dataset = replay_buffer.as_dataset(
+            sample_batch_size=batch_size,
+            num_steps=2).prefetch(50)
+
+        experience_dataset_fn = lambda: dataset
+
+        tf_eval_policy = tf_agent.policy
+        eval_policy = py_tf_eager_policy.PyTFEagerPolicy(
+            tf_eval_policy, use_tf_function=True)
+
+        tf_collect_policy = tf_agent.collect_policy
+        collect_policy = py_tf_eager_policy.PyTFEagerPolicy(
+            tf_collect_policy, use_tf_function=True)
+
+        random_policy = random_py_policy.RandomPyPolicy(
+            collect_env.time_step_spec(), collect_env.action_spec())
+
+        initial_collect_actor = actor.Actor(
+            collect_env,
+            random_policy,
+            train_step,
+            steps_per_run=initial_collect_steps,
+            observers=[replay_observer])
+
+        initial_collect_actor.run()
+
+        env_step_metric = py_metrics.EnvironmentSteps()
+        collect_actor = actor.Actor(
+            collect_env,
+            collect_policy,
+            train_step,
+            steps_per_run=1,
+            metrics=actor.collect_metrics(10),
+            summary_dir=os.path.join(tempdir, learner.TRAIN_DIR),
+            observers=[replay_observer, env_step_metric])
+
 
 
