@@ -9,6 +9,7 @@ def select_file() -> str:
     path = filedialog.askopenfilename()
     return path
 
+
 def load_image(path: str, label: tk.Label):
     image = cv2.imread(path)
     image = Image.fromarray(image)
