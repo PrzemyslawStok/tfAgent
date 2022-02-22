@@ -1,4 +1,5 @@
 import tkinter as tk
+import threading
 import numpy as np
 from PIL import Image, ImageTk
 from tkinter import filedialog
@@ -8,7 +9,6 @@ import cv2
 def select_file() -> str:
     path = filedialog.askopenfilename()
     return path
-
 
 def load_image(path: str, label: tk.Label):
     image = cv2.imread(path)
@@ -26,6 +26,27 @@ def open_image(label: tk.Label):
         return
 
     load_image(path, label)
+
+
+def play_video(path: str, label: tk.Label):
+    if (len(path) == 0):
+        return
+    cap = cv2.VideoCapture(path)
+
+    if (cap.isOpened() == False):
+        return
+
+    while (cap.isOpened()):
+        ret, frame = cap.read()
+        if ret == True:
+            image = Image.fromarray(frame)
+            image = image.resize((500, 500))
+            image = ImageTk.PhotoImage(image)
+
+            label.config(image=image)
+            label.image = image
+        else:
+            break
 
 
 def create_view(window: tk.Tk, buttonsNo: int = 5) -> tk.Label:
@@ -47,9 +68,14 @@ def create_view(window: tk.Tk, buttonsNo: int = 5) -> tk.Label:
     return label
 
 
+
 if __name__ == "__main__":
     window = tk.Tk()
     label = create_view(window)
-    load_image("picture.jpg", label)
+
+    path = select_file()
+    film_thread = threading.Thread(target=play_video, args=(path,label))
+    film_thread.daemon = True
+    film_thread.start()
 
     window.mainloop()
