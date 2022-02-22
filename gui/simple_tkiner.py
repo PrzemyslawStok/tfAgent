@@ -9,30 +9,15 @@ video_thread: threading.Thread
 video_condition: threading.Condition = threading.Condition()
 video_path: str = ""
 
+video_paused = False
+
 def select_file() -> str:
     global video_path
     path = filedialog.askopenfilename()
     video_path = path
     return path
 
-def load_image(path: str, label: tk.Label):
-    image = cv2.imread(path)
-    image = Image.fromarray(image)
-    image = image.resize((500, 500))
-    image = ImageTk.PhotoImage(image)
-
-    label.config(image=image)
-    label.image = image
-
-
-def open_image(label: tk.Label):
-    path = select_file()
-    if (len(path) == 0):
-        return
-
-    load_image(path, label)
-
-def create_view(window: tk.Tk, buttonsNo: int = 5) -> tk.Label:
+def create_view(window: tk.Tk) -> tk.Label:
     window.minsize(700, 500)
 
     right_frame = tk.Frame(master=window, bg="gray", width=500, height=500)
@@ -53,19 +38,25 @@ def create_view(window: tk.Tk, buttonsNo: int = 5) -> tk.Label:
 
     return label
 
+
 def play_video(path: str, label: tk.Label):
+    global video_path
+
     video_condition.acquire()
-    print("video waiting")
     video_condition.wait()
 
-    if (len(path) == 0):
+    if (len(video_path) == 0):
         return
-    cap = cv2.VideoCapture(path)
+
+    cap = cv2.VideoCapture(video_path)
 
     if (cap.isOpened() == False):
         return
 
     while (cap.isOpened()):
+        if (video_paused):
+            video_condition.wait()
+
         ret, frame = cap.read()
         if ret == True:
             image = Image.fromarray(frame)
@@ -77,20 +68,28 @@ def play_video(path: str, label: tk.Label):
         else:
             break
 
+
 def start():
-    if(len(video_path)==0):
+    global video_paused
+    if (len(video_path) == 0):
         return
 
+    video_paused = False
+
+    video_condition.acquire()
     video_condition.notify()
+    video_condition.release()
 
 def pause():
-    pass
+    global video_paused
+    video_paused = True
+
 
 if __name__ == "__main__":
     window = tk.Tk()
     label = create_view(window)
 
-    video_thread = threading.Thread(target=play_video, args=(video_path,label))
+    video_thread = threading.Thread(target=play_video, args=(video_path, label))
     video_thread.daemon = True
     video_thread.start()
 
