@@ -43,7 +43,6 @@ def create_view(window: tk.Tk, buttonsNo: int = 5) -> None:
         button = tk.Button(master=left_frame, text=f"Button_{i}", command=lambda: open_image(label))
         button.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
 
-
 if __name__ == "__main__":
     window = tk.Tk()
     create_view(window)
