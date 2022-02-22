@@ -27,7 +27,7 @@ def open_image(label: tk.Label):
     load_image(path, label)
 
 
-def create_view(window: tk.Tk, buttonsNo: int = 5) -> None:
+def create_view(window: tk.Tk, buttonsNo: int = 5) -> tk.Label:
     window.minsize(700, 500)
 
     right_frame = tk.Frame(master=window, bg="gray", width=500, height=500)
@@ -43,8 +43,12 @@ def create_view(window: tk.Tk, buttonsNo: int = 5) -> None:
         button = tk.Button(master=left_frame, text=f"Button_{i}", command=lambda: open_image(label))
         button.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
 
+    return label
+
+
 if __name__ == "__main__":
     window = tk.Tk()
-    create_view(window)
+    label = create_view(window)
+    load_image("picture.jpg", label)
 
     window.mainloop()
