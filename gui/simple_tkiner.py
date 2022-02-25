@@ -9,12 +9,21 @@ video_thread: threading.Thread
 video_condition: threading.Condition = threading.Condition()
 video_path: str = ""
 
+video_capture: cv2.VideoCapture
+
 video_paused = False
 
+def load_video(path: str):
+    global video_capture
+    if (len(path) == 0):
+        video_capture = None
+        return
+
+    video_capture = cv2.VideoCapture(path)
+
 def select_file() -> str:
-    global video_path
     path = filedialog.askopenfilename()
-    video_path = path
+    load_video(path)
     return path
 
 def create_view(window: tk.Tk) -> tk.Label:
@@ -38,26 +47,20 @@ def create_view(window: tk.Tk) -> tk.Label:
 
     return label
 
-
-def play_video(path: str, label: tk.Label):
-    global video_path
+def play_video(label: tk.Label):
+    global video_capture
 
     video_condition.acquire()
     video_condition.wait()
 
-    if (len(video_path) == 0):
+    if (video_capture.isOpened() == False):
         return
 
-    cap = cv2.VideoCapture(video_path)
-
-    if (cap.isOpened() == False):
-        return
-
-    while (cap.isOpened()):
+    while (video_capture.isOpened()):
         if (video_paused):
             video_condition.wait()
 
-        ret, frame = cap.read()
+        ret, frame = video_capture.read()
         if ret == True:
             image = Image.fromarray(frame)
             image = image.resize((500, 500))
@@ -89,7 +92,7 @@ if __name__ == "__main__":
     window = tk.Tk()
     label = create_view(window)
 
-    video_thread = threading.Thread(target=play_video, args=(video_path, label))
+    video_thread = threading.Thread(target=play_video, args=(label, ))
     video_thread.daemon = True
     video_thread.start()
 
