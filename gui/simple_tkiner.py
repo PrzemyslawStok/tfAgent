@@ -47,34 +47,38 @@ def create_view(window: tk.Tk) -> tk.Label:
 
     return label
 
-def play_video(label: tk.Label):
-    global video_capture
+def play_frame(label: tk.Label)->bool:
+    if (video_capture.isOpened() == False):
+        return False
 
+    ret, frame = video_capture.read()
+    if ret:
+        image = Image.fromarray(frame)
+        image = image.resize((500, 500))
+        image = ImageTk.PhotoImage(image)
+
+        label.config(image=image)
+        label.image = image
+
+        return True
+    else:
+        return False
+
+def play_video(label: tk.Label):
     video_condition.acquire()
     video_condition.wait()
 
-    if (video_capture.isOpened() == False):
-        return
-
-    while (video_capture.isOpened()):
+    while (True):
         if (video_paused):
             video_condition.wait()
-
-        ret, frame = video_capture.read()
-        if ret == True:
-            image = Image.fromarray(frame)
-            image = image.resize((500, 500))
-            image = ImageTk.PhotoImage(image)
-
-            label.config(image=image)
-            label.image = image
-        else:
+        if not play_frame(label):
             break
 
 
 def start():
     global video_paused
-    if (len(video_path) == 0):
+
+    if not video_paused:
         return
 
     video_paused = False
