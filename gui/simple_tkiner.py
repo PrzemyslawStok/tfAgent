@@ -11,7 +11,7 @@ video_path: str = ""
 
 video_capture: cv2.VideoCapture
 
-video_paused = False
+video_paused = True
 
 def load_video(path: str):
     global video_capture
@@ -21,10 +21,13 @@ def load_video(path: str):
 
     video_capture = cv2.VideoCapture(path)
 
-def select_file() -> str:
+
+def select_file(label: tk.Label) -> str:
     path = filedialog.askopenfilename()
     load_video(path)
+    play_frame(label)
     return path
+
 
 def create_view(window: tk.Tk) -> tk.Label:
     window.minsize(700, 500)
@@ -38,7 +41,7 @@ def create_view(window: tk.Tk) -> tk.Label:
     right_frame.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
     left_frame.pack(fill=tk.BOTH, side=tk.LEFT, expand=True)
 
-    button = tk.Button(master=left_frame, text=f"Load file", command=select_file)
+    button = tk.Button(master=left_frame, text=f"Load file", command=lambda: select_file(label))
     button.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
     button = tk.Button(master=left_frame, text=f"Start", command=start)
     button.pack(fill=tk.BOTH, side=tk.TOP, expand=True)
@@ -47,12 +50,17 @@ def create_view(window: tk.Tk) -> tk.Label:
 
     return label
 
-def play_frame(label: tk.Label)->bool:
+
+def process_frame(frame: np.ndarray) -> np.ndarray:
+    return frame
+
+def play_frame(label: tk.Label) -> bool:
     if (video_capture.isOpened() == False):
         return False
 
     ret, frame = video_capture.read()
     if ret:
+        frame = process_frame(frame)
         image = Image.fromarray(frame)
         image = image.resize((500, 500))
         image = ImageTk.PhotoImage(image)
@@ -64,6 +72,7 @@ def play_frame(label: tk.Label)->bool:
     else:
         return False
 
+
 def play_video(label: tk.Label):
     video_condition.acquire()
     video_condition.wait()
@@ -73,7 +82,6 @@ def play_video(label: tk.Label):
             video_condition.wait()
         if not play_frame(label):
             break
-
 
 def start():
     global video_paused
@@ -87,6 +95,7 @@ def start():
     video_condition.notify()
     video_condition.release()
 
+
 def pause():
     global video_paused
     video_paused = True
@@ -96,7 +105,7 @@ if __name__ == "__main__":
     window = tk.Tk()
     label = create_view(window)
 
-    video_thread = threading.Thread(target=play_video, args=(label, ))
+    video_thread = threading.Thread(target=play_video, args=(label,))
     video_thread.daemon = True
     video_thread.start()
 
