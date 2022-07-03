@@ -177,11 +177,11 @@ if __name__ == "__main__":
     montezuma = "MontezumaRevenge-ram-v0"
 
     envName = lunar_lander
-    renderEnv(envName, loadAgent(agentDir, envName))
+    #renderEnv(envName, loadAgent(agentDir, envName))
 
     # renderEnvModel(cartpole, loadModel(modelsDir, envName))
 
     # viewEnv(lunar_lander)
 
-    #runKeyboard()
-    #play(lunar_lander, {None: 0, Key.right: 1, Key.down: 2, Key.left: 3}, speed=0.1)
+    runKeyboard()
+    play(lunar_lander, {None: 0, Key.right: 1, Key.down: 2, Key.left: 3}, speed=0.1)

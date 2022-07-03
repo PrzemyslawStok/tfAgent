@@ -1,3 +1,4 @@
+import mujoco_py
 import numpy as np
 from tf_agents.environments import py_environment, utils
 from tf_agents.specs import array_spec

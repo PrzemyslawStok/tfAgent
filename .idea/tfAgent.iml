@@ -6,7 +6,7 @@
       <excludeFolder url="file://$MODULE_DIR$/savedAgents" />
       <excludeFolder url="file://$MODULE_DIR$/savedModels" />
     </content>
-    <orderEntry type="inheritedJdk" />
+    <orderEntry type="jdk" jdkName="Python 3.9 (tfAgent)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="PyDocumentationSettings">
